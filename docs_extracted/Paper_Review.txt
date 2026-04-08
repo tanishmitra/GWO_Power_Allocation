@@ -1,0 +1,584 @@
+
+
+===== PAGE 1 =====
+
+Executive Summary
+Strengths: The  paper  addresses  a  timely  problem  (power  allocation  in  integrated  sensing  and
+communication,  ISAC)  and  evaluates  multiple  solution  strategies.  The  comparative  study  of  seven
+optimization algorithms (SLSQP , PSO, DE, SA, SFO, POA, GWO) is thorough and demonstrates empirical
+performance  differences.  The  experiments  under  dynamic  CSI  provide  valuable  data,  and  the  authors
+identify that GWO outperforms others in this setting.  Weaknesses: However , the work lacks  novelty: it
+applies  known  algorithms  rather  than  developing  new  techniques.  Key  methodological  analyses  are
+missing: the multi-objective nature of ISAC (sensing vs. communication) is oversimplified via a weighted
+sum without exploring the full Pareto trade-off. Channel modeling is simplistic (no standardized models),
+limiting  realism.  Theoretical  justification  is  thin:  convergence  or  complexity  of  the  algorithms  are  not
+analyzed.  Experimental  rigor  is  incomplete  (no  statistical  significance  tests,  limited  baselines,  missing
+ablations). The writing needs polish (many AI-like phrases and structural issues). Overall, the paper would
+benefit  from  deeper  theoretical  grounding,  expanded  experiments  (with  realistic  channels  and  multi-
+objective analysis), and clarity in contributions.
+Detailed Critique by Section
+Title & Abstract: The title “Efficient Power Allocation for ISAC Systems Using Nature-Inspired Meta-Heuristic
+Optimization”  is  descriptive  but  oversells  “efficient”  without  evidence  or  definition.  It  suggests  a  novel
+scheme,  yet  the  paper  merely  compares  existing  algorithms.  Consider  a  more  neutral  title  (e.g.
+“Comparative  Study  of  Metaheuristics  for  ISAC  Power  Allocation”).  The  abstract  succinctly  states  the
+problem (dynamic power allocation in ISAC) and lists results, but it  omits key details: it does not clearly
+state the multi-objective nature (trade-off between sensing and communication) nor what is new about the
+study. It reads as generic (“address the problem … through this paper”) and lacks mention of limitations. It
+should briefly state the novelty (e.g. empirical comparison, identification of GWO’s robustness) and quantify
+improvements with statistical confidence. Also, the sentence “we identify GWO as the optimal algorithm for
+practical ISAC” is too strong without qualification (optimal in what sense? only in this setup). 
+Introduction: The introduction should motivate ISAC by citing foundational works and clarifying the dual
+objectives.  While  it  mentions  integrated  sensing  and  communications,  it  omits  standard  context  like
+“integration gain” and “coordination gain”. For example, ComSoc explains that ISAC merges radar and
+comm  to  share  spectrum/hardware  and  enable  dual  goals  (data  rate  vs.  sensing  accuracy).  The
+introduction should reference key surveys (e.g. Liu  et al., IEEE JSAC 2022) that discuss the fundamental
+sensing–communication  trade-offs.  The  authors  should  explicitly  define  the  trade-off:  maximizing
+communication rate usually conflicts with sensing precision. The current text lacks clear references to
+these  ideas.  The  contributions  should  be  stated  as  bullet  points.  Currently,  the  intro  vaguely  claims  a
+“dynamic  allocation  under  time-varying  CSI”  but  does  not  explain  why  existing  methods  fail  or  why
+metaheuristics are warranted. It should cite [38] that power allocation problems are generally NP-hard in
+wireless networks, justifying heuristic methods.
+1
+1
+2
+3
+1
+
+===== PAGE 2 =====
+
+Related  Work: This  section  covers  some  ISAC  and  metaheuristic  literature,  but  it’s  incomplete  and
+unfocused. It cites Liu  et al. [1] (probably a survey on ISAC trade-offs) but does not reference other key
+works (e.g. Zhang et al. on waveform design, Yu et al., etc.). It lacks mention of multi-objective optimization
+research in ISAC, which is crucial. For instance, recent works use Pareto analysis to characterize ISAC trade-
+offs ; such citations are missing. The metaheuristic discussion (Section 2.2) lists algorithms but does not
+critically assess past uses of metaheuristics in wireless systems. For example, Sun  et al. (2022) compare
+metaheuristics for power control in massive MIMO and note the NP-hardness of the problem. The
+Related Work should align with the formulation: it should discuss prior studies that used weighted-sum vs.
+Pareto approaches in ISAC. It should also identify gaps – for example, if no one has yet evaluated GWO in
+ISAC context, that could be a novelty point, but the paper doesn’t claim or verify that. Instead, it only lists
+algorithms without depth. Reviewer feedback likely suggested adding multi-objective and realistic channel
+references, which should be addressed here.
+Problem Formulation: The optimization problem is stated mathematically, but clarity is needed. The multi-
+objective  nature  is  compressed  into  a  weighted-sum  “objective  function”  (Eq.  4):  maximize  
+. This scalarization hides the true trade-off. The formulation should
+clearly  identify  the  two  objectives   and   and  note  constraints  (power  budget,
+positivity).  The  choice  of  a  linear  combination  with  a  tunable  weight   implies  a  Pareto  optimization
+problem. The authors should discuss under what assumption weighted sums capture the Pareto front, and
+note  that  non-convexity can  make  this  insufficient  (some  Pareto  points  may  not  be  found  by  simple
+weighting) .  The  constraints  (e.g.  total  power  ,  per-subcarrier  max,  etc.)  must  be
+explicitly stated and physically motivated. If the SNR of the sensing channel uses a logarithmic form, that
+should be justified (why ?). Variables like  and  need context (is  fixed or varied? How is  chosen?).
+Clarify any assumptions about CSI dynamics (e.g. discrete time slots indexed by  ). Any system model
+(channel fading distribution, noise power) should be defined here or in a separate model section, not left
+implicit.
+Methodology: The section describes the use of seven optimization algorithms. However , it should include
+either a succinct description or a reference for each algorithm, and detail any modifications made. For a
+peer review, the methods should be reproducible: the algorithm parameters (population size, number of
+iterations,  inertia  weights,  crossover  rates,  etc.)  must  be  listed  or  tabulated.  If  a  library  or  prior
+implementation is used, cite it. The pseudo-code of GWO (Fig.1) is helpful, but more explanation is needed:
+e.g. how are  wolves updated? How is convergence checked? The step “update all wolves using the
+three  best  solution  vectors”  in  the  GWO  description  needs  elaboration  (is  it  like  the  original  Mirjalili
+formulation?). Similarly, the other algorithms (SLSQP , SA, SFO, POA) are not described at all; at least cite
+standard references or provide key equations. Importantly, since no new algorithm is proposed, the novelty
+must come from how these are applied. The authors should explain any computational tricks (parallel runs,
+random seeds). A common pitfall is failing to compare all methods on equal footing; make sure iteration
+counts or function evaluations are aligned. 
+Experiments: The experimental setup is under-specified. It must detail the system parameters (number of
+subcarriers  , channel bandwidth, noise power , mobility model, CSI update rate, etc.). The current text
+hints  at  dynamic  CSI  but  gives  no  model  (is  fading  Rayleigh?  How  quickly  does  it  change?  Path  loss
+exponent?). Use of realistic, standardized channel models is strongly recommended. For instance, 3GPP TR
+38.901 provides detailed models for urban micro (UMi), urban macro (UMa), rural macro (RMa), indoors, etc
+. The simulation should specify whether it uses UMi NLOS or UMa LOS etc., with citation. ITU models
+(e.g. ITU-R M.2135) or WINNER II scenarios (e.g. A1/A2 indoor , B1-B3 outdoor) are alternative choices.
+2
+3
+f(p) =
+αR +comm (1−α)γlog (SNR )10 sense
+R (p)comm SNR (p)sense
+α
+2 4 p ≤∑n n P 
+max
+log 
+10 α γ α γ
+t
+α,β,δ
+N
+5
+2
+
+===== PAGE 3 =====
+
+Table 1 below compares a few recommended models, their environments and key parameters. Without a
+standardized model, the results may not reflect realistic performance. The authors should also include
+baseline  schemes  beyond  SLSQP:  for  example,  a  multi-objective  algorithm (NSGA-II  or  MOPSO)  to
+compute a true Pareto front as a reference, or a simple heuristic like water-filling for the communication or
+fixed allocation for sensing. Metrics should include not only the combined objective but also separate
+communication rate and sensing metrics (e.g. detection probability or CRB if available). Statistical rigor is
+needed: run each algorithm over many random seeds and report mean±std (as Sun et al. did with 20 trials
+), and perform significance tests to assert when differences are meaningful. Ablation studies should
+vary  hyperparameters  (population  size,  inertia  weight,  learning  factors)  to  show  robustness.
+Hyperparameter sweeps (e.g. on PSO’s inertia) and a reproducibility checklist (listing all settings, random
+seeds) are essential. 
+Results and Discussion: The results (Figures 2–4, Table 1, etc.) show performance trends but lack error bars
+or confidence intervals. We recommend boxplots or confidence intervals for metrics like rate and SNR to
+visualize variability. The statement “GWO achieves 15–18% superior performance” should be backed by
+statistical evidence (e.g. p-values). The discussion attributes GWO’s success to “balanced exploitation” and
+“efficient subcarrier selection,” but these claims need references or analysis (e.g. gradient analysis of the
+objective).  A  common  pitfall  is  confirmation  bias:  ensure  that  why GWO  excels  is  not  just  subjective.
+Compare with literature: e.g. have others found GWO effective in resource allocation problems? If so, cite
+relevant studies. The explanation should tie back to algorithm behavior: perhaps GWO’s leadership update
+yields more directed search, as Mirjalili noted. The results section should explicitly mention any Pareto
+curves (if computed), or at least note how varying  affects the trade-off (which is not shown at all). The
+analysis of dynamic tracking speed is interesting but should be supported by more data (e.g. quantify
+“adaptation speed” metrics). If space allows, add plots of communication-rate vs. sensing-SNR for different
+ (the Pareto front). 
+Theoretical Analysis (Convergence & Complexity): The manuscript currently lacks theoretical support. For
+credibility, each algorithm’s properties should be outlined. For example,  SLSQP (a quasi-Newton method)
+has local convergence guarantees under smoothness and convexity assumptions (in particular , it converges
+to a local optimum of the Lagrangian if the objective is concave). PSO’s convergence is subtle: Clerc &
+Kennedy (2002) showed that under certain parameter settings the velocity stagnates and particles converge
+to a point, but not necessarily the global optimum. The cited study uses fixed-point theory to prove
+PSO converges to a unique fixed point (depending on parameters). Similar analyses can be cited or outlined
+for DE, SA, etc.: for instance,  Simulated Annealing has a classical proof that with a logarithmically slow
+cooling schedule it converges to the global optimum (but this is impractically slow). It would strengthen the
+paper to sketch these proofs or cite them: e.g., “PSO can be shown to converge (in expectation) under stable
+parameter settings,” and “SA converges to a global optimum in the infinite-time limit if  slowly
+.” Grey Wolf Optimizer (GWO) has no standard proof in the literature; note this as a limitation (e.g. see
+Mirjalili’s original GWO paper for lack of formal proof). 
+Complexity analysis should be given in Big-O terms. For each algorithm:
+- SLSQP: Each iteration involves solving a Quadratic Program (roughly  per iteration for  variables)
+plus gradient evaluation.
+-  PSO/DE/GWO/SA/etc.: These population-based metaheuristics cost  , where   is iterations,
+ population size, and  number of decision variables (subcarriers). For example, if , , 
+, then operations are on the order of  simple evaluations. Provide a formula like  for each,
+and estimate actual runtime if known. Common pitfalls include neglecting the cost of objective evaluation:
+6
+α
+α
+7
+7 7
+7 T →0
+4
+O(d )3 d
+O(T ⋅ N⋅ d) T
+N d d=20 N=50 T =
+1000 106 O(TNd)
+3
+
+===== PAGE 4 =====
+
+here, computing  and  involves summing over subcarriers (another  step inside
+each evaluation). 
+Outline proof sketches or conditions (in bullet form): e.g.,
+- SLSQP: Converges to a stationary point if  and  are twice differentiable and the Hessian is
+Lipschitz. (This typically holds here, but the weighted sum is not concave so multiple local optima exist.)
+- PSO: Under constriction factor or cognitive/social coefficient settings (Kennedy & Clerc, 2002), the particle
+velocities decrease to zero, implying convergence to a point. The fixed point is found by solving 
+ (analyzing stability).
+- SA: If the temperature schedule  satisfies  (e.g. ), then SA
+converges with probability 1 to a global optimum (classical result). Common pitfall: using a too-fast cooling
+schedule loses this guarantee.
+-  DE, SFO, POA: Briefly mention that no simple global convergence proof exists; they are heuristics. The
+reader should be warned they may stall or require tuning. 
+These outlines should be summarized in text or in a small box with formulas. For instance, note the key
+Kuhn–Tucker conditions for Pareto optimality:
+where  is the Lagrange multiplier for the power sum constraint. One could explicitly derive 
+and , leading to a “water-filling”-like condition. Presenting these formulas (with
+appropriate assumptions) will greatly strengthen the theoretical backing.
+Conclusion: The current conclusion reiterates results but misses a critical reflection. It should highlight the
+lessons learned (e.g. GWO’s robustness, general recommendations for ISAC) and limitations/future work
+(lack  of  Pareto  analysis,  simplifications,  need  for  convergence  proof).  The  statement  “metaheuristic
+algorithms have good generalization abilities with simulated networks” is vague; better to qualify in
+what sense. Also, if future work is to study heterogeneous networks, that might be beyond the paper’s
+scope – focus on more immediate next steps (like addressing the identified gaps). 
+Novelty and Research Directions
+Novelty gaps: The main novelty claim is weak: the paper does not propose a new algorithm or theoretical
+result, only applies existing methods. To convert this into original contributions: 
+Pareto-analysis contribution: Treat the sensing–comm trade-off as a bi-objective problem.
+Compute and analyze the Pareto frontier explicitly (e.g. using NSGA-II or by sweeping ). This itself
+can be a novel insight for ISAC, illustrating the full trade-off curve rather than a single operating
+point . 
+New formulations: Instead of a fixed-weight sum, consider alternative multi-objective techniques
+(e.g. multi-objective DE) and report how different allocations shift resource to sensing vs comm. For
+example, incorporate a constraint like “maximize comm rate subject to a minimum sensing SNR” and
+solve via convex or global methods, adding a new angle. 
+R (p)comm SNR (p)sense O(d)
+R 
+comm log(SNR)
+7 x=
+(ω+ϕ)x−ϕx∗
+T 
+k 1/exp(ΔE/T ) =∑ k ∞ T =k T /log(1+0 k)
+α∇f (p)+1 (1−α)∇f (p)+2 λ1=0,
+λ ∇f =1 ∑n ∂p 
+n
+∂R
+∇f =2 
+ln10
+γ
+∂p 
+n
+∂logSNR
+8
+• 
+α
+2
+• 
+4
+
+===== PAGE 5 =====
+
+Hybrid or novel algorithms: If GWO is found superior , investigate why and possibly propose a
+hybrid algorithm (e.g. PSO+GWO or adding domain-specific heuristics). Alternatively, consider
+machine-learning-driven allocation (deep RL) as a contrasting approach for further study (though
+this would be future work, not in this paper). 
+Theoretical extensions: Provide convergence guarantees for a simplified case (e.g. prove that
+SLSQP converges for the convex relaxation of the problem, or derive closed-form best response in
+the single-user case). Or derive a mathematical expression for the optimal power allocation in an
+extreme case (e.g.  reduces to water-filling,  to full-power-everywhere sensing). 
+New experiments: Propose experiments under varying CSI dynamics (e.g. different Doppler
+spreads), different sensing tasks (target number , different SNR definitions), and sensitivity to model
+mismatch. For example, add “transmit beamforming vs omnidirectional” to see geometry effects. 
+Multi-stage ISAC: Suggest extending to a scenario where sensing informs subsequent comm
+adaptation, which could be a direction beyond static allocation. 
+Summarized research directions (as an ordered list):
+1.  Pareto Frontier Mapping: Implement multi-objective optimization (e.g. NSGA-II) to map the rate-SNR
+Pareto frontier . Analyze shape (convex vs. nonconvex) and identify regimes.
+2.  Algorithmic Innovation: Explore hybrids or parameter-adaptive versions of GWO/PSO tuned for ISAC
+(e.g. dynamic weight adjustment between communication and sensing goals within the algorithm).
+3.  Extended ISAC Models: Incorporate more realistic sensing models (e.g. probabilistic detection metrics
+instead of SNR) and optimize for those; design waveform co-optimization (power  and waveform or beam
+pattern).
+4. Theoretical Analysis: Attempt closed-form solutions or bounds for special cases (e.g. single-subcarrier ,
+high-SNR regime) to benchmark the heuristics.
+5. Experimental Scenarios: Evaluate in multi-user settings (different users with conflicting objectives), or
+under partial CSI (imperfect knowledge), to extend realism. 
+Methodological Issues and Pareto Analysis
+A key omission is the Pareto (multi-objective) perspective. ISAC inherently involves a trade-off: improving
+communication rate often degrades sensing accuracy, and vice versa. A proper Pareto analysis would
+treat the two objectives explicitly, rather than fixing an arbitrary weight . Why it matters: The Pareto front
+(or Pareto frontier) is the set of allocations where no objective can improve without worsening the other
+. By mapping this frontier , one reveals the full performance region and informs system designers of
+possible trade-offs. For example, is GWO’s advantage only at one point on this front, or across it?
+Performing Pareto analysis:
+1.  Formulate as a Bi-Objective Problem: Let   and  . The multi-
+objective problem is to simultaneously maximize subject to .
+2.  Weighted Sum (Convex Hull approach): Solve   for a range of  . Each
+solution  ideally lies on the Pareto front. Vary  in steps (e.g. 0, 0.1, …, 1) and plot  points.
+However , note weighted-sum only finds the  convex hull of the Pareto set; non-convex regions may be
+missed.
+3.  Multi-Objective Algorithm: Use a true multi-objective EA (e.g. NSGA-II or MOEA/D) that maintains a
+population along the Pareto front. These find diverse Pareto-optimal solutions without scalarization.
+4. KKT Conditions: For analytic insight, use Lagrange multipliers: at a Pareto-optimal , there exists 
+• 
+• 
+α=1 α=0
+• 
+• 
+2 4
+2
+α
+4
+f (p) =1 R (p)comm f (p) =2 SNR (p)sense
+(f ,f )1 2 p ≤∑ n P 
+max
+max αf +p 1 (1−α)f 
+2 α∈[0,1]
+p (α)∗ 2 α (f ,f )1 2
+p α∈
+5
+
+===== PAGE 6 =====
+
+ and  such that
+plus complementary slackness on the power sum constraint. (This equation comes from stationarity of the
+weighted objective plus .) From this, one can derive allocation formulas. For example, if 
+ and , then setting gradients equal yields
+(up to the constant ). Solving this set of equations (subject to ) gives the Pareto-optimal
+allocation for that . This explicit condition can guide algorithm design or sanity-check solutions. 
+Include a step-by-step algorithm for Pareto computation: 
+ParetoFrontComputation():
+    inputs: channel profiles {h_n},{g_n}, total power P_max, number of weights K
+    outputs: set of Pareto-optimal points (R,SNR)
+    for k = 0..K:
+        α = k/K
+        solve maximize α * R_comm(p) + (1-α)*SNR_sense(p) 
+                subject to sum p_n <= P_max, p_n>=0
+        record (R_comm, SNR_sense) at solution
+    end
+    // Optionally refine with multi-objective EA to catch nonconvex cases
+    return list of (R,SNR) points
+Citations: Pareto front methods are standard in multi-objective optimization. By performing this
+analysis, the authors would not only validate the single-weight results but also demonstrate the entire
+achievable region, turning comparisons into an original contribution. 
+Channel Models and Simulation Realism
+The current simulations lack specification of channel models, which is critical. Using standardized channel
+models ensures credibility and comparability. We recommend the following: 
+Model Scenario Key Features/Parameters Reference
+3GPP UMi
+NLOS
+Urban microcell,
+non-LOS
+Path loss ~22log10(d)+..., up to 500 ns
+delay spread, Doppler ~300 Hz at 120 km/
+h
+3GPP TR 38.901
+(0,1) λ≥0
+α∇f (p)+1 (1−α)∇f (p) =2 λ1,
+λ( p −∑ n P )max
+f =1 log(1+∑n h p )n n f =2 log(1+∑n g p )n n
+ =1+h p 
+n n
+αh 
+n for each n1+g p 
+n n
+(1−α)g 
+n
+λ p =∑ n P 
+max
+α
+2 4
+5
+6
+
+===== PAGE 7 =====
+
+Model Scenario Key Features/Parameters Reference
+3GPP UMa
+LOS/NLOS
+Urban macro, cell-
+edge & LOS
+Path loss formula includes base station
+height, delay spread ~1000 ns, etc.3GPP TR 38.901
+WINNER II
+A1
+Indoor office, static/
+mobile
+Clustered delay lines, delay spread ~100
+ns, moderate Doppler; widely used for
+indoor MIMO
+WINNER II
+deliverable D1.1
+WINNER II
+B1/B3
+Urban (street
+canyon) LOS/NLOS
+Rich multipath, Doppler for vehicular
+speeds, support smooth time variation.
+WINNER II
+models
+ITU-R PedA/
+B
+Pedestrian (low
+speed) indoor/
+outdoor
+Legacy models (e.g. M.1225), simpler path
+loss/fading (e.g., Rayleigh), Doppler ~10
+Hz.
+ITU-R M.1225,
+Rec. M.2135
+Table 1: Standardized channel models suitable for ISAC simulations.
+Each  simulation  scenario  should  specify  parameters  (carrier  freq,  user  speed,  antenna  heights).  For
+example, for an outdoor cellular scenario, use 3GPP UMi NLOS at 3.5 GHz, UE speed 30 km/h (Doppler ~100
+Hz). For indoor target detection, use WINNER II A1 with pedestrian speed (Doppler ~10 Hz). Cite 3GPP TR
+38.901 and WINNER II descriptions as above. Without such realism, results are inconclusive.
+Theoretical Backing: Proof Sketches and
+Complexity
+A rigorous submission should either include or outline the following proofs and analyses: 
+Convergence of each algorithm: As discussed above, cite or outline convergence conditions. For
+instance: PSO converges under the constriction factor model; SLSQP converges locally under
+smoothness (cite a numerical optimization text); Simulated Annealing converges globally with slow
+cooling (cite classic textbooks, e.g. van Laarhoven & Aarts). Highlight any assumptions needed: e.g.,
+objective continuity, boundedness. Also warn of pitfalls: PSO may converge prematurely if  is too
+low; SA may require too many iterations; no guarantee for DE/GWO in general. 
+Complexity analysis: Provide formulas for computational cost. For example: “Each PSO iteration
+updates   particles,  each  with   variables.  Velocity  update  is  ,  and  evaluating  both
+objectives per particle is , so total . Over  iterations this is . Similarly, DE/
+POA/SFO  are  .  SLSQP’s  per-iteration  cost  is  dominated  by  solving  a   QP ,  roughly
+. Tabulate these (see Table 2).” Also include  complexity of convergence: e.g. if SLSQP uses
+second-order  information,  each  iteration  might  be  expensive  but  often  converges  in  ~50–100
+iterations for this problem size. Such analysis helps in deciding algorithm trade-offs. 
+Common pitfalls: Emphasize that metaheuristics require tuning. For example, PSO’s performance
+heavily depends on inertia weight  and acceleration constants. Provide pseudo-code or equations
+showing the update rules (like the given (6)-(7) for PSO) and explain how to choose parameters (e.g.
+9
+9
+• 
+7
+w
+• 
+N d O(Nd)
+O(Nd) O(Nd) T O(TNd)
+O(TNd) d×d
+O(d )3
+• 
+w
+7
+
+===== PAGE 8 =====
+
+Clerc’s constriction factor). For GWO, note the absence of a best-practice rule for coefficients ,  (as
+often set to 2 or linearly decreasing). 
+By addressing these points, the manuscript will move beyond mere empirical claims to a solid theoretical
+framework. 
+Experimental Design and Rigor
+To bolster credibility, redesign the experiments with statistical rigor:
+- Baselines: In addition to SLSQP , include classical benchmarks. For example, Water-filling (optimize rate
+only) and  Equal power (for fairness) can serve as extreme baselines. Include at least one multi-objective
+solver (NSGA-II) to provide reference Pareto points.
+- Metrics: Besides the combined objective, report Communication rate (bps/Hz) and Sensing quality (e.g.
+SNR or detection probability) separately. If possible, include a sensing-specific metric like the Cramér–Rao
+bound or localization error . Also report computational cost (runtime) and algorithm “stability” (variance of
+results).
+-  Ablation studies: Vary each algorithm’s key hyperparameter (population size, learning factors, cooling
+schedule) and show impact. For example, test PSO with  from 0.4 to 1.2. Show results (maybe in a table).
+Also vary problem dimensions: try different numbers of subcarriers (e.g. 10, 20, 50) to study scalability.
+- Hyperparameter search: Describe how hyperparameters were chosen (grid search, default values, etc.). If
+tuned per algorithm, summarize the search process.
+- Reproducibility: Include a checklist (in a footnote or appendix): random seed usage, number of runs (at
+least 30 recommended for stats), software versions. 
+Tables/Plots:
+- Table 2 (below) could list all performance metrics used (mean rate, mean SNR, std. dev., runtime).
+- Figures: convergence curves of objective vs. evaluations with shaded confidence bands, boxplots of final
+metrics, and Pareto plot (rate vs. SNR) for key algorithms. 
+Without these, conclusions are anecdotal. For instance, if GWO only beats others in one random seed case,
+it’s not robust. The prior study by Sun et al. ran 20 trials and averaged; we should do at least as many, if
+not 50, and perform paired t-tests (or Wilcoxon) to ascertain if differences are significant. 
+Writing, Presentation and Clarity
+The manuscript’s prose has several issues:
+- Avoid AI-like phrasing and vague language. Phrases like “achieves exceptional robustness” or “works as a
+black-box solver” are clichés. Be concrete: e.g. “GWO consistently reaches the target rate more reliably”
+rather than “exceptional robustness”.
+- Improve structure. The “Why GWO excels” bullet list (end of Sec. V) is useful but could be integrated into
+the discussion with references. Reorganize subsections so that each experiment’s purpose is clear (e.g.
+“Experiment 1: varying CSI speed”, “Experiment 2: communication-priority”).
+-  Clarify  ambiguities.  For  instance,  define  “communication-priority”  vs  “sensing-priority”  settings  (these
+appear in Fig.2 caption). Spell out abbreviations at first use (e.g. CSI, ISAC). Ensure consistency (the paper
+sometimes says “SLSQP” and other times “SFO” without definition).
+a α
+w
+6
+8
+
+===== PAGE 9 =====
+
+- Improve figures/tables. Ensure all axes have units, legends are clear , and captions fully describe the
+scenario (e.g. channel model, number of runs, CI). The current captions are minimal.
+- English grammar: check for subject-verb agreement and remove redundant words. For example, “The
+next-generation  of  networks  enable”  should  be  “Next-generation  networks  enable”.  Have  a  native
+speaker or professional editor review the text. 
+Revision Roadmap (Timeline and Milestones)
+Below is a suggested plan for revising the manuscript, with tasks prioritized and estimated effort. The
+mermaid diagram provides a Gantt chart of milestones over (for example) a 6-week period.
+gantt
+    title Peer-Review Revision Plan
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d, %Y
+    section Multi-objective Analysis
+      Derive KKT/gradient conditions  :done,    2026-04-01, 2d
+      Implement Pareto computation    :active,  2026-04-03, 5d
+      Plot and analyze Pareto results :         2026-04-08, 4d
+    section Channel Modeling
+      Select standard models (3GPP, ITU, WINNER) :done, 2026-04-01, 2d
+      Implement new channel scenarios           :         2026-04-03, 5d
+      Run simulations and compare              :         2026-04-08, 3d
+    section Theory & Complexity
+      Write convergence proof sketches (PSO, SA):         2026-04-05, 3d
+      Derive complexity bounds for each method:         2026-04-08, 2d
+    section Experiments & Figures
+      Expand baselines and metrics             :         2026-04-10, 4d
+      Conduct hyperparameter sweeps/ablation   :         2026-04-14, 3d
+      Statistical analysis (t-tests, CI)       :         2026-04-17, 2d
+      Create new tables/plots (Pareto, boxplots):        2026-04-19, 3d
+    section Writing & Editing
+      Rewrite abstract/introduction           :         2026-04-15, 2d
+      Revise methodology/related work        :         2026-04-17, 2d
+      Proofread for language clarity          :         2026-04-19, 1d
+      Final formatting and submit            :         2026-04-20, 1d
+Figure: Proposed revision timeline and milestones. Tasks are grouped by theme. For example,  Multi-objective
+Analysis must be tackled first to guide new experiments. Overall, around 4–6 weeks of effort is expected.
+Collaboration (e.g. co-authors handling different sections) can parallelize some tasks. Key goals are: (i)
+10
+9
+
+===== PAGE 10 =====
+
+introduce  Pareto  analysis,  (ii)  improve  realism  (channels,  baselines),  (iii)  add  theory  (convergence/
+complexity), and (iv) refine writing. 
+Additional Tables
+Recommended MetricDescription Use Case
+Communication Rate
+(bps/Hz) Shannon rate Primary comm performance; used
+in objective.
+Sensing SNR (dB)  or target
+detection probability
+Sensing quality metric; second
+objective.
+Energy Efficiency (b/J)Rate per total power consumedUseful if battery or energy is a
+concern.
+Computation Time (ms)Runtime of algorithm per allocationReal-time feasibility indicator .
+Std. Dev. of ObjectivesStatistical spread across runs Variability/robustness measure.
+Table 2: Key performance metrics. Each simulation should report the mean and standard deviation of these
+metrics over multiple runs, and any unit or formula used should be specified (e.g. bps/Hz for rate).
+Proposed ExperimentVariation Purpose
+Pareto sweep Vary weight  from 0 to 1 Map the full rate-vs-SNR trade-off curve.
+Channel Model
+comparison
+Use 3GPP UMi, UMa, WINNER-
+A1, ITU-PedB
+Test performance under different
+realistic models.
+CSI Dynamics Change Doppler (0–200 km/h),
+update rate Evaluate robustness to CSI variability.
+Algorithm parameter
+sweep e.g. PSO inertia from 0.4 to 1.2Assess sensitivity and choose optimal
+settings.
+Baseline comparisonAdd NSGA-II, waterfilling, equal
+power
+Compare with classical methods and
+multi-objective EA.
+Table 3: Proposed additional experiments. This ensures thorough exploration of conditions and justifies claims
+about algorithm performance.
+By following this detailed plan and addressing all the above points, the manuscript will be significantly
+strengthened for submission to Comsys ’26.
+Sources: The analysis above is informed by recent ISAC surveys, standardized channel modeling
+references , and optimization literature. Specific examples (e.g. metaheuristic comparisons)
+are  drawn  from  [38]  and  [41].  The  recommendations  align  with  best  practices  from  IEEE  Comms  and
+INFOCOM workshops (e.g. multi-objective analysis, 3GPP channel models). 
+log (1+∑ 2 SINR)n
+log (1+10 SNR)
+α
+1 2
+5 9 7 4
+2 5
+10
+
+===== PAGE 11 =====
+
+Best Readings in Integrated Sensing and Communication (ISAC) | IEEE Communications Society
+https://www.comsoc.org/publications/best-readings/integrated-sensing-and-communication-isac
+Sensing-Communication Trade-Off in ISAC
+https://www.emergentmind.com/topics/sensing-communication-trade-off
+Optimal Power Allocation Based on Metaheuristic Algorithms in Wireless Network
+https://www.mdpi.com/2227-7390/10/18/3336
+Multi-Objective Optimization for Pareto Frontier Sensitivity Analysis in Power Systems
+https://www.mdpi.com/2071-1050/16/14/5854
+Improving the Efficiency of MIMO Simulations in ns-3
+https://par .nsf.gov/servlets/purl/10466304
+Convergence and Stability Analysis of Particle Swarm Optimization Using The Fixed Point Method |
+International Journal of Mathematical Modelling & Computations 
+https://oiccpress.com/ijm2c/article/view/16910
+lucris.lub.lu.se
+https://lucris.lub.lu.se/ws/files/43543817/1858740.pdf
+Integrated Sensing and Communication: Enabling Techniques, Applications, Tools and Datasets,
+Standardization, and Future Directions | NIST
+https://www.nist.gov/publications/integrated-sensing-and-communication-enabling-techniques-applications-tools-and
+1
+2
+3 6 8
+4
+5
+7
+9
+10
+11
