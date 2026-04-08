@@ -16,9 +16,10 @@ class PelicanOptimizer:
 
     def solve(self, problem: ISACSnapshotProblem, alpha: float) -> OptimizationResult:
         rng = np.random.default_rng(self.hyperparameters.seed)
+        decision_dim = problem.decision_dimension
         population = np.vstack(
             [
-                problem.repair(rng.dirichlet(np.ones(problem.dimension)) * problem.total_power_w)
+                problem.repair(problem.random_decision(rng))
                 for _ in range(self.hyperparameters.population_size)
             ]
         )
@@ -34,13 +35,13 @@ class PelicanOptimizer:
                 if rng.random() < 0.5:
                     j = int(rng.integers(0, self.hyperparameters.population_size))
                     interaction = int(rng.integers(1, 3))
-                    candidate = candidate + rng.random(problem.dimension) * (population[j] - interaction * candidate)
+                    candidate = candidate + rng.random(decision_dim) * (population[j] - interaction * candidate)
                 else:
-                    candidate = candidate + rng.random(problem.dimension) * (best - candidate)
+                    candidate = candidate + rng.random(decision_dim) * (best - candidate)
 
                 if rng.random() < self.hyperparameters.surface_attack_probability:
-                    sigma = 0.03 * problem.total_power_w / max(problem.dimension, 1)
-                    candidate = candidate + rng.normal(0.0, sigma, size=problem.dimension)
+                    sigma = 0.03 * problem.total_power_w / max(decision_dim, 1)
+                    candidate = candidate + rng.normal(0.0, sigma, size=decision_dim)
 
                 candidate = problem.repair(candidate)
                 candidate_score = problem.scalar_objective(candidate, alpha)
@@ -50,11 +51,13 @@ class PelicanOptimizer:
             history.append(float(scores.max()))
 
         best_index = int(np.argmax(scores))
-        best_allocation = population[best_index]
+        best_decision = population[best_index]
+        best_power, best_waveform = problem.decompose_decision(best_decision)
         return OptimizationResult(
             solver_name="POA",
-            power_allocation=best_allocation,
-            metrics=problem.metrics(best_allocation, alpha),
+            power_allocation=best_power,
+            waveform_profile=best_waveform,
+            metrics=problem.metrics(best_decision, alpha),
             alpha=alpha,
             history=history,
             metadata={

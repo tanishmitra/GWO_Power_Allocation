@@ -16,9 +16,10 @@ class DifferentialEvolutionOptimizer:
 
     def solve(self, problem: ISACSnapshotProblem, alpha: float) -> OptimizationResult:
         rng = np.random.default_rng(self.hyperparameters.seed)
+        decision_dim = problem.decision_dimension
         population = np.vstack(
             [
-                problem.repair(rng.dirichlet(np.ones(problem.dimension)) * problem.total_power_w)
+                problem.repair(problem.random_decision(rng))
                 for _ in range(self.hyperparameters.population_size)
             ]
         )
@@ -31,8 +32,8 @@ class DifferentialEvolutionOptimizer:
                 a, b, c = rng.choice(indices, size=3, replace=False)
                 mutant = population[a] + self.hyperparameters.differential_weight * (population[b] - population[c])
 
-                crossover_mask = rng.random(problem.dimension) < self.hyperparameters.crossover_rate
-                crossover_mask[int(rng.integers(0, problem.dimension))] = True
+                crossover_mask = rng.random(decision_dim) < self.hyperparameters.crossover_rate
+                crossover_mask[int(rng.integers(0, decision_dim))] = True
                 trial = np.where(crossover_mask, mutant, population[i])
                 trial = problem.repair(trial)
                 trial_score = problem.scalar_objective(trial, alpha)
@@ -43,11 +44,13 @@ class DifferentialEvolutionOptimizer:
             history.append(float(scores.max()))
 
         best_index = int(np.argmax(scores))
-        best_allocation = population[best_index]
+        best_decision = population[best_index]
+        best_power, best_waveform = problem.decompose_decision(best_decision)
         return OptimizationResult(
             solver_name="DE",
-            power_allocation=best_allocation,
-            metrics=problem.metrics(best_allocation, alpha),
+            power_allocation=best_power,
+            waveform_profile=best_waveform,
+            metrics=problem.metrics(best_decision, alpha),
             alpha=alpha,
             history=history,
             metadata={

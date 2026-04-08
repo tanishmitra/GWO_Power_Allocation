@@ -18,7 +18,7 @@ class ParticleSwarmOptimizer:
         rng = np.random.default_rng(self.hyperparameters.seed)
         positions = np.vstack(
             [
-                problem.repair(rng.dirichlet(np.ones(problem.dimension)) * problem.total_power_w)
+                problem.repair(problem.random_decision(rng))
                 for _ in range(self.hyperparameters.population_size)
             ]
         )
@@ -52,9 +52,11 @@ class ParticleSwarmOptimizer:
                 global_best_position = personal_best_positions[iteration_best_index].copy()
             history.append(global_best_score)
 
+        best_power, best_waveform = problem.decompose_decision(global_best_position)
         return OptimizationResult(
             solver_name="PSO",
-            power_allocation=global_best_position,
+            power_allocation=best_power,
+            waveform_profile=best_waveform,
             metrics=problem.metrics(global_best_position, alpha),
             alpha=alpha,
             history=history,

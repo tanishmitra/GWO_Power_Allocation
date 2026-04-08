@@ -48,6 +48,13 @@ class SimulationConfig:
 class ObjectiveConfig:
     gamma: float = 10.0
     default_alpha: float = 0.5
+    sensing_metric: str = "snr"
+    detection_false_alarm_probability: float = 1e-3
+    detection_integration_gain: float = 8.0
+    waveform_co_optimization: bool = False
+    waveform_min_value: float = 1e-6
+    waveform_comm_exponent: float = 0.15
+    waveform_sensing_exponent: float = 1.0
 
 
 @dataclass(frozen=True)

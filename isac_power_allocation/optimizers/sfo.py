@@ -16,9 +16,10 @@ class StarfishOptimizer:
 
     def solve(self, problem: ISACSnapshotProblem, alpha: float) -> OptimizationResult:
         rng = np.random.default_rng(self.hyperparameters.seed)
+        decision_dim = problem.decision_dimension
         population = np.vstack(
             [
-                problem.repair(rng.dirichlet(np.ones(problem.dimension)) * problem.total_power_w)
+                problem.repair(problem.random_decision(rng))
                 for _ in range(self.hyperparameters.population_size)
             ]
         )
@@ -33,13 +34,13 @@ class StarfishOptimizer:
             for i in range(self.hyperparameters.population_size):
                 candidate = population[i].copy()
                 if rng.random() < 0.5:
-                    random_direction = rng.dirichlet(np.ones(problem.dimension)) * problem.total_power_w
-                    candidate = candidate + adaptive_a * rng.random(problem.dimension) * (random_direction - candidate)
+                    random_direction = problem.random_decision(rng)
+                    candidate = candidate + adaptive_a * rng.random(decision_dim) * (random_direction - candidate)
                 else:
-                    candidate = candidate + adaptive_a * rng.random(problem.dimension) * (best - candidate)
+                    candidate = candidate + adaptive_a * rng.random(decision_dim) * (best - candidate)
 
                 if rng.random() < self.hyperparameters.regeneration_probability:
-                    regenerate_mask = rng.random(problem.dimension) < 0.1
+                    regenerate_mask = rng.random(decision_dim) < 0.1
                     if np.any(regenerate_mask):
                         candidate[regenerate_mask] = rng.random(int(regenerate_mask.sum()))
 
@@ -51,11 +52,13 @@ class StarfishOptimizer:
             history.append(float(scores.max()))
 
         best_index = int(np.argmax(scores))
-        best_allocation = population[best_index]
+        best_decision = population[best_index]
+        best_power, best_waveform = problem.decompose_decision(best_decision)
         return OptimizationResult(
             solver_name="SFO",
-            power_allocation=best_allocation,
-            metrics=problem.metrics(best_allocation, alpha),
+            power_allocation=best_power,
+            waveform_profile=best_waveform,
+            metrics=problem.metrics(best_decision, alpha),
             alpha=alpha,
             history=history,
             metadata={

@@ -33,14 +33,15 @@ def main() -> None:
     print(f"Snapshot index: {summary.snapshot_index} / {summary.channel_sequence_length - 1}")
     print(f"Alpha: {summary.alpha}")
     print("")
-    print("Algorithm | Rate (bps/Hz) | Sensing SNR (dB) | Objective | Runtime (ms)")
-    print("-" * 72)
+    print("Algorithm | Rate (bps/Hz) | SNR (dB) | Pd | Objective | Runtime (ms)")
+    print("-" * 86)
     for result in summary.results:
         runtime_ms = float(result.metadata.get('runtime_ms', 0.0))
         print(
             f"{result.solver_name:9s} | "
             f"{result.metrics.communication_rate_bps_hz:13.3f} | "
-            f"{result.metrics.sensing_snr_db:16.3f} | "
+            f"{result.metrics.sensing_snr_db:8.3f} | "
+            f"{result.metrics.sensing_detection_probability:4.3f} | "
             f"{result.metrics.weighted_objective:9.3f} | "
             f"{runtime_ms:11.3f}"
         )

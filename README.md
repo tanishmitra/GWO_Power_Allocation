@@ -54,6 +54,8 @@ tests/
   - optional LOS/Rician component
 - Sensing is modeled as a separate round-trip channel with configurable processing gain, instead of reusing the communication link unchanged.
 - Default presets include communication and sensing processing gains so the standardized-scenario-inspired channel remains physically motivated while still producing informative Pareto fronts for algorithm analysis.
+- The sensing objective now supports either SNR-based utility or probabilistic detection utility (`Pd` at configured `Pfa`).
+- Optional co-optimization of power and a normalized waveform/beam-pattern profile is supported through objective config flags.
 
 ## Assumptions
 

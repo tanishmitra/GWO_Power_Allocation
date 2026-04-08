@@ -11,11 +11,11 @@ from .optimizers.gwo import GreyWolfOptimizer
 def dominates(left: OptimizationResult, right: OptimizationResult) -> bool:
     left_pair = (
         left.metrics.communication_rate_bps_hz,
-        left.metrics.sensing_snr_linear,
+        left.metrics.sensing_utility,
     )
     right_pair = (
         right.metrics.communication_rate_bps_hz,
-        right.metrics.sensing_snr_linear,
+        right.metrics.sensing_utility,
     )
     return (
         left_pair[0] >= right_pair[0]

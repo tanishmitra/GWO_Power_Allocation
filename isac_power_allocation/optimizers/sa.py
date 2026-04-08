@@ -17,8 +17,8 @@ class SimulatedAnnealingOptimizer:
 
     def solve(self, problem: ISACSnapshotProblem, alpha: float) -> OptimizationResult:
         rng = np.random.default_rng(self.hyperparameters.seed)
-        current = np.full(problem.dimension, problem.total_power_w / problem.dimension)
-        current = problem.repair(current)
+        decision_dim = problem.decision_dimension
+        current = problem.repair(problem.equal_power_decision())
         current_score = problem.scalar_objective(current, alpha)
         best = current.copy()
         best_score = current_score
@@ -29,8 +29,8 @@ class SimulatedAnnealingOptimizer:
             fraction = iteration / max(self.hyperparameters.iterations - 1, 1)
             temperature = self.hyperparameters.initial_temperature * (temperature_ratio ** fraction)
 
-            sigma = self.hyperparameters.proposal_sigma * problem.total_power_w / max(problem.dimension, 1)
-            proposal = problem.repair(current + rng.normal(0.0, sigma, size=problem.dimension))
+            sigma = self.hyperparameters.proposal_sigma * problem.total_power_w / max(decision_dim, 1)
+            proposal = problem.repair(current + rng.normal(0.0, sigma, size=decision_dim))
             proposal_score = problem.scalar_objective(proposal, alpha)
             delta = proposal_score - current_score
 
@@ -43,9 +43,11 @@ class SimulatedAnnealingOptimizer:
                 best_score = current_score
             history.append(best_score)
 
+        best_power, best_waveform = problem.decompose_decision(best)
         return OptimizationResult(
             solver_name="SA",
-            power_allocation=best,
+            power_allocation=best_power,
+            waveform_profile=best_waveform,
             metrics=problem.metrics(best, alpha),
             alpha=alpha,
             history=history,

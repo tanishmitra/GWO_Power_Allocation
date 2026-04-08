@@ -41,6 +41,11 @@ class ParetoStudySummary:
                 "alpha": result.alpha,
                 "metrics": asdict(result.metrics),
                 "power_allocation": [float(value) for value in result.power_allocation],
+                "waveform_profile": (
+                    None
+                    if result.waveform_profile is None
+                    else [float(value) for value in result.waveform_profile]
+                ),
                 "metadata": dict(result.metadata),
             }
 
@@ -53,9 +58,12 @@ class ParetoStudySummary:
             "baseline_results": [serialize_result(result) for result in self.baseline_results],
             "problem": {
                 "dimension": self.problem.dimension,
+                "decision_dimension": self.problem.decision_dimension,
                 "total_power_w": self.problem.total_power_w,
                 "noise_power_w": self.problem.noise_power_w,
                 "gamma": self.problem.gamma,
+                "sensing_metric": self.problem.sensing_metric,
+                "waveform_co_optimization": self.problem.waveform_co_optimization,
             },
         }
 
@@ -85,6 +93,11 @@ class AlgorithmComparisonSummary:
                     "alpha": result.alpha,
                     "metrics": asdict(result.metrics),
                     "power_allocation": [float(value) for value in result.power_allocation],
+                    "waveform_profile": (
+                        None
+                        if result.waveform_profile is None
+                        else [float(value) for value in result.waveform_profile]
+                    ),
                     "metadata": dict(result.metadata),
                 }
                 for result in self.results
@@ -104,12 +117,15 @@ class DynamicAlgorithmAggregate:
     std_rate_bps_hz: float
     mean_sensing_snr_db: float
     std_sensing_snr_db: float
+    mean_sensing_detection_probability: float
+    std_sensing_detection_probability: float
     mean_objective: float
     std_objective: float
     mean_runtime_ms: float
     total_runtime_ms: float
     per_step_rate_bps_hz: list[float]
     per_step_sensing_snr_db: list[float]
+    per_step_sensing_detection_probability: list[float]
     per_step_objective: list[float]
     per_step_runtime_ms: list[float]
 
@@ -154,6 +170,13 @@ def run_pareto_study(config: ExperimentConfig) -> tuple[ParetoStudySummary, obje
         noise_power_w=config.link_budget.noise_power_w,
         gamma=config.objective.gamma,
         per_subcarrier_max_power_w=config.link_budget.per_subcarrier_max_power_w,
+        sensing_metric=config.objective.sensing_metric,
+        detection_false_alarm_probability=config.objective.detection_false_alarm_probability,
+        detection_integration_gain=config.objective.detection_integration_gain,
+        waveform_co_optimization=config.objective.waveform_co_optimization,
+        waveform_min_value=config.objective.waveform_min_value,
+        waveform_comm_exponent=config.objective.waveform_comm_exponent,
+        waveform_sensing_exponent=config.objective.waveform_sensing_exponent,
     )
 
     gwo_solver = GreyWolfOptimizer(config.gwo)
@@ -197,6 +220,13 @@ def build_problem_from_config(config: ExperimentConfig) -> tuple[ISACSnapshotPro
         noise_power_w=config.link_budget.noise_power_w,
         gamma=config.objective.gamma,
         per_subcarrier_max_power_w=config.link_budget.per_subcarrier_max_power_w,
+        sensing_metric=config.objective.sensing_metric,
+        detection_false_alarm_probability=config.objective.detection_false_alarm_probability,
+        detection_integration_gain=config.objective.detection_integration_gain,
+        waveform_co_optimization=config.objective.waveform_co_optimization,
+        waveform_min_value=config.objective.waveform_min_value,
+        waveform_comm_exponent=config.objective.waveform_comm_exponent,
+        waveform_sensing_exponent=config.objective.waveform_sensing_exponent,
     )
     return problem, snapshot, snapshot_index, len(sequence)
 
@@ -218,6 +248,13 @@ def build_problem_sequence_from_config(config: ExperimentConfig) -> list[ISACSna
             noise_power_w=config.link_budget.noise_power_w,
             gamma=config.objective.gamma,
             per_subcarrier_max_power_w=config.link_budget.per_subcarrier_max_power_w,
+            sensing_metric=config.objective.sensing_metric,
+            detection_false_alarm_probability=config.objective.detection_false_alarm_probability,
+            detection_integration_gain=config.objective.detection_integration_gain,
+            waveform_co_optimization=config.objective.waveform_co_optimization,
+            waveform_min_value=config.objective.waveform_min_value,
+            waveform_comm_exponent=config.objective.waveform_comm_exponent,
+            waveform_sensing_exponent=config.objective.waveform_sensing_exponent,
         )
         for state in sequence
     ]
@@ -274,6 +311,7 @@ def run_dynamic_algorithm_comparison(config: ExperimentConfig) -> DynamicCompari
     for solver_name, solver_factory in solver_builders:
         rates: list[float] = []
         snrs_db: list[float] = []
+        detection_probabilities: list[float] = []
         objectives: list[float] = []
         runtimes: list[float] = []
 
@@ -285,6 +323,7 @@ def run_dynamic_algorithm_comparison(config: ExperimentConfig) -> DynamicCompari
 
             rates.append(result.metrics.communication_rate_bps_hz)
             snrs_db.append(result.metrics.sensing_snr_db)
+            detection_probabilities.append(result.metrics.sensing_detection_probability)
             objectives.append(result.metrics.weighted_objective)
             runtimes.append(runtime_ms)
 
@@ -295,12 +334,15 @@ def run_dynamic_algorithm_comparison(config: ExperimentConfig) -> DynamicCompari
                 std_rate_bps_hz=float(np.std(rates)),
                 mean_sensing_snr_db=float(np.mean(snrs_db)),
                 std_sensing_snr_db=float(np.std(snrs_db)),
+                mean_sensing_detection_probability=float(np.mean(detection_probabilities)),
+                std_sensing_detection_probability=float(np.std(detection_probabilities)),
                 mean_objective=float(np.mean(objectives)),
                 std_objective=float(np.std(objectives)),
                 mean_runtime_ms=float(np.mean(runtimes)),
                 total_runtime_ms=float(np.sum(runtimes)),
                 per_step_rate_bps_hz=[float(x) for x in rates],
                 per_step_sensing_snr_db=[float(x) for x in snrs_db],
+                per_step_sensing_detection_probability=[float(x) for x in detection_probabilities],
                 per_step_objective=[float(x) for x in objectives],
                 per_step_runtime_ms=[float(x) for x in runtimes],
             )

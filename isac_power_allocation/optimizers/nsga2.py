@@ -47,12 +47,14 @@ class NSGA2Optimizer:
         final_front = self._fast_non_dominated_sort(final_objectives)[0]
         results: list[OptimizationResult] = []
         for index in final_front:
-            allocation = problem.repair(population[index])
+            decision = problem.repair(population[index])
+            allocation, waveform = problem.decompose_decision(decision)
             results.append(
                 OptimizationResult(
                     solver_name="NSGA2",
                     power_allocation=allocation,
-                    metrics=problem.metrics(allocation, alpha_for_reporting),
+                    waveform_profile=waveform,
+                    metrics=problem.metrics(decision, alpha_for_reporting),
                     alpha=None,
                 )
             )
@@ -65,7 +67,7 @@ class NSGA2Optimizer:
     ) -> np.ndarray:
         return np.vstack(
             [
-                problem.repair(rng.dirichlet(np.ones(problem.dimension)) * problem.total_power_w)
+                problem.repair(problem.random_decision(rng))
                 for _ in range(self.hyperparameters.population_size)
             ]
         )
@@ -162,7 +164,7 @@ class NSGA2Optimizer:
         if rng.random() > self.hyperparameters.crossover_rate:
             return parent_a.copy(), parent_b.copy()
 
-        blend = rng.random(problem.dimension)
+        blend = rng.random(problem.decision_dimension)
         child_a = blend * parent_a + (1.0 - blend) * parent_b
         child_b = blend * parent_b + (1.0 - blend) * parent_a
         return problem.repair(child_a), problem.repair(child_b)
@@ -173,11 +175,11 @@ class NSGA2Optimizer:
         problem: ISACSnapshotProblem,
         rng: np.random.Generator,
     ) -> np.ndarray:
-        mutation_mask = rng.random(problem.dimension) < self.hyperparameters.mutation_rate
+        mutation_mask = rng.random(problem.decision_dimension) < self.hyperparameters.mutation_rate
         if not np.any(mutation_mask):
             return problem.repair(candidate)
 
-        sigma = self.hyperparameters.mutation_sigma * problem.total_power_w / max(problem.dimension, 1)
+        sigma = self.hyperparameters.mutation_sigma * problem.total_power_w / max(problem.decision_dimension, 1)
         updated = candidate.copy()
         updated[mutation_mask] += rng.normal(0.0, sigma, size=int(mutation_mask.sum()))
         return problem.repair(updated)

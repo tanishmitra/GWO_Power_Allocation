@@ -16,6 +16,15 @@ from .channels.models import ChannelState
 from .objectives import OptimizationResult
 
 
+def _sensing_plot_values(results: list[OptimizationResult]) -> tuple[list[float], str]:
+    if not results:
+        return [], "Sensing utility"
+    metric_name = results[0].metrics.sensing_metric_name
+    if metric_name == "detection_probability":
+        return [result.metrics.sensing_detection_probability for result in results], "Detection probability"
+    return [result.metrics.sensing_snr_db for result in results], "Sensing SNR (dB)"
+
+
 def plot_pareto_front(
     weighted_results: list[OptimizationResult],
     nsga2_results: list[OptimizationResult],
@@ -26,36 +35,41 @@ def plot_pareto_front(
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     plt.figure(figsize=(8, 5))
+    reference_results = weighted_results or nsga2_results or baseline_results
+    _, y_label = _sensing_plot_values(reference_results)
 
     if weighted_results:
+        sensing_values, _ = _sensing_plot_values(weighted_results)
         plt.plot(
             [result.metrics.communication_rate_bps_hz for result in weighted_results],
-            [result.metrics.sensing_snr_db for result in weighted_results],
+            sensing_values,
             marker="o",
             linewidth=2,
             label="GWO alpha sweep",
         )
 
     if nsga2_results:
+        sensing_values, _ = _sensing_plot_values(nsga2_results)
         plt.scatter(
             [result.metrics.communication_rate_bps_hz for result in nsga2_results],
-            [result.metrics.sensing_snr_db for result in nsga2_results],
+            sensing_values,
             s=30,
             alpha=0.75,
             label="NSGA-II front",
         )
 
     for result in baseline_results:
+        sensing_values, _ = _sensing_plot_values([result])
         plt.scatter(
             result.metrics.communication_rate_bps_hz,
-            result.metrics.sensing_snr_db,
+            sensing_values[0],
             marker="x",
             s=80,
             label=result.solver_name,
         )
 
     plt.xlabel("Communication rate (bps/Hz)")
-    plt.ylabel("Sensing SNR (dB)")
+    plt.ylabel(y_label)
     plt.title("ISAC Pareto Frontier")
     plt.grid(True, alpha=0.3)
     plt.legend()
