@@ -91,7 +91,7 @@ python .\scripts\run_pareto_pd.py --integration-gain 0.02
 python .\scripts\run_dynamic_pd.py --integration-gain 0.02
 ```
 
-Disable waveform co-optimization only if you want the legacy power-only variant:
+Waveform co-optimization is enabled by default. Disable it only if you want the power-only ablation:
 
 ```powershell
 python .\scripts\run_algorithm_comparison_pd.py --integration-gain 0.02 --no-waveform
@@ -109,14 +109,7 @@ This generates:
 - `outputs/dynamic_algorithm_comparison.png`
 - `outputs/dynamic_algorithm_comparison_summary.json`
 - `outputs/dynamic_objective_traces.png`
-- `outputs/pareto_front_pd*.png`
-- `outputs/channel_snapshot_pd*.png`
-- `outputs/pareto_summary_pd*.json`
-- `outputs/algorithm_comparison_pd*.png`
-- `outputs/algorithm_comparison_pd*_summary.json`
-- `outputs/dynamic_algorithm_comparison_pd*.png`
-- `outputs/dynamic_algorithm_comparison_summary_pd*.json`
-- `outputs/dynamic_objective_traces_pd*.png`
+- `outputs/isac_project_final_paper.pdf`
 
 ## Test
 
