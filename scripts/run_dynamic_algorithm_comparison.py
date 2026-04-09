@@ -1,4 +1,4 @@
-"""Run the dynamic multi-step optimizer comparison across time-varying CSI."""
+"""Run the default detection-probability and waveform-aware dynamic comparison."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ def main() -> None:
     print(f"Time steps: {summary.num_time_steps}")
     print(f"Alpha: {summary.alpha}")
     print("")
-    print("Algorithm | Mean Obj | Std Obj | Mean Rate | Mean SNR (dB) | Mean Pd | Mean Runtime (ms)")
+    print("Algorithm | Mean Obj | Std Obj | Mean Rate | Mean Pd | Mean SNR (dB) | Mean Runtime (ms)")
     print("-" * 100)
     for item in summary.aggregates:
         print(
@@ -44,8 +44,8 @@ def main() -> None:
             f"{item.mean_objective:8.3f} | "
             f"{item.std_objective:7.3f} | "
             f"{item.mean_rate_bps_hz:9.3f} | "
-            f"{item.mean_sensing_snr_db:13.3f} | "
             f"{item.mean_sensing_detection_probability:7.3f} | "
+            f"{item.mean_sensing_snr_db:13.3f} | "
             f"{item.mean_runtime_ms:16.3f}"
         )
 

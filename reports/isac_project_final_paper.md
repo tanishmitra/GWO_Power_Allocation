@@ -1,7 +1,7 @@
 # Probabilistic Sensing and Waveform Co-Optimization for ISAC Power Allocation: Final Project Report
 
 ## Abstract
-This project extends a modular integrated sensing and communication (ISAC) power-allocation codebase from a sensing-SNR-only objective to a more realistic sensing-performance formulation. The final system introduces two major capabilities: (1) probabilistic sensing optimization using detection probability (`Pd`) at configurable false-alarm probability (`Pfa`), and (2) joint power-plus-waveform co-optimization through an expanded decision vector. These additions are integrated across objective evaluation, Pareto analysis, scalar solvers, multi-objective NSGA-II search, dynamic time-varying experiments, serialization, visualization, and tests. The resulting framework preserves backward compatibility with legacy SNR-based studies while enabling advanced ISAC experimentation under richer sensing objectives and waveform design degrees of freedom.
+This project extends a modular integrated sensing and communication (ISAC) power-allocation codebase from a sensing-SNR-only objective to a detection-probability-centered formulation. The final system introduces two major capabilities: (1) probabilistic sensing optimization using detection probability (`Pd`) at configurable false-alarm probability (`Pfa`), and (2) joint power-plus-waveform co-optimization through an expanded decision vector. These additions are integrated across objective evaluation, Pareto analysis, scalar solvers, multi-objective NSGA-II search, dynamic time-varying experiments, serialization, visualization, and tests. The resulting framework now treats detection probability and waveform shaping as the primary sensing design path while retaining legacy SNR-based studies as a compatibility option.
 
 ## 1. Introduction
 Integrated sensing and communication (ISAC) systems must balance communication throughput and sensing quality under shared resource constraints. The original project modeled this trade-off with communication rate and sensing SNR. While useful, sensing SNR alone is not always a task-level metric for detection-oriented sensing, where probability of detection is more meaningful.
@@ -25,7 +25,7 @@ Legacy weighted optimization is still available:
 
 `J = alpha * R + (1 - alpha) * gamma * log10(SNR_sense)`
 
-This mode is retained through `sensing_metric="snr"` for reproducibility of earlier experiments.
+This mode is retained through `sensing_metric="snr"` for compatibility, but the codebase defaults to detection probability.
 
 ## 3. Extended Sensing Objective
 ### 3.1 Detection-Probability Utility
@@ -39,7 +39,7 @@ The scalar objective is then:
 
 `J = alpha * R + (1 - alpha) * gamma * U_sense`
 
-where `U_sense` is either `log10(SNR_sense)` (legacy) or `Pd` (new mode).
+where `U_sense` is either `log10(SNR_sense)` (legacy) or `Pd` (default mode).
 
 ### 3.2 Reported Metrics
 Each solution now reports:
@@ -81,7 +81,7 @@ The extended model was integrated across the full codebase:
    - Added decision-space helpers for equal/random initialization and repair.
 2. Solvers:
     - Updated GWO, PSO, DE, SA, SFO, POA, and NSGA-II to use the new decision dimension transparently.
-   - Solvers now return power allocation plus waveform profile (when enabled).
+   - Solvers now return power allocation plus waveform profile in the default mode.
 3. Pareto utilities:
    - Dominance checks now use sensing utility (generic across SNR and `Pd` modes).
 4. Experiment runner and JSON summaries:

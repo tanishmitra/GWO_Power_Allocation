@@ -16,6 +16,7 @@ from isac_power_allocation.config import (
     SAHyperparameters,
     SFOHyperparameters,
     SimulationConfig,
+    build_default_experiment_config,
 )
 from isac_power_allocation.experiments.runner import run_dynamic_algorithm_comparison
 from isac_power_allocation.objectives import ISACSnapshotProblem
@@ -114,6 +115,12 @@ class OptimizerTests(unittest.TestCase):
         self.assertAlmostEqual(float(np.sum(result.waveform_profile)), float(problem.dimension), places=6)
         self.assertGreaterEqual(result.metrics.sensing_detection_probability, 0.0)
         self.assertLessEqual(result.metrics.sensing_detection_probability, 1.0)
+
+    def test_default_configuration_prefers_pd_and_waveform(self) -> None:
+        config = build_default_experiment_config()
+        self.assertEqual(config.objective.sensing_metric, "detection_probability")
+        self.assertTrue(config.objective.waveform_co_optimization)
+        self.assertLess(config.objective.detection_integration_gain, 1.0)
 
 
 if __name__ == "__main__":

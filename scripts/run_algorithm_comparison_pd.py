@@ -33,9 +33,17 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--waveform",
+        dest="waveform",
         action="store_true",
-        help="Enable joint power + waveform co-optimization.",
+        help="Enable joint power + waveform co-optimization (default: on).",
     )
+    parser.add_argument(
+        "--no-waveform",
+        dest="waveform",
+        action="store_false",
+        help="Disable joint power + waveform co-optimization.",
+    )
+    parser.set_defaults(waveform=True)
     return parser.parse_args()
 
 
@@ -74,15 +82,15 @@ def main() -> None:
     print(f"Integration gain: {args.integration_gain}")
     print(f"Waveform co-optimization: {args.waveform}")
     print("")
-    print("Algorithm | Rate (bps/Hz) | SNR (dB) | Pd | Objective | Runtime (ms)")
+    print("Algorithm | Rate (bps/Hz) | Pd | SNR (dB) | Objective | Runtime (ms)")
     print("-" * 86)
     for result in summary.results:
         runtime_ms = float(result.metadata.get("runtime_ms", 0.0))
         print(
             f"{result.solver_name:9s} | "
             f"{result.metrics.communication_rate_bps_hz:13.3f} | "
-            f"{result.metrics.sensing_snr_db:8.3f} | "
             f"{result.metrics.sensing_detection_probability:4.3f} | "
+            f"{result.metrics.sensing_snr_db:8.3f} | "
             f"{result.metrics.weighted_objective:9.3f} | "
             f"{runtime_ms:11.3f}"
         )

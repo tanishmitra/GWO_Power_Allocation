@@ -5,7 +5,7 @@ This repository implements a modular codebase for the paper-level ISAC power all
 - explicit Pareto-front analysis instead of only a single weighted sum point
 - more realistic, scenario-driven time-varying channel models instead of a purely simplistic fading model
 
-The current implementation intentionally does not introduce a new hybrid algorithm. It keeps the original Grey Wolf Optimizer (GWO) as a scalarized solver, adds NSGA-II as a reference multi-objective solver for Pareto analysis, and separates channels, objectives, optimizers, plotting, and experiment runners into independent modules.
+The current implementation now centers probabilistic detection (`Pd`) and joint power-plus-waveform co-optimization as the default sensing design path. It keeps the original Grey Wolf Optimizer (GWO) as a scalarized solver, adds NSGA-II as a reference multi-objective solver for Pareto analysis, and separates channels, objectives, optimizers, plotting, and experiment runners into independent modules.
 
 ## Project Layout
 
@@ -41,6 +41,8 @@ tests/
   - alpha sweeps with GWO
   - a true multi-objective NSGA-II front
   - non-dominated filtering utilities
+- The default sensing objective is probabilistic detection (`Pd`) at configurable `Pfa`.
+- Joint power and waveform co-optimization is enabled by default so the sensing side of the problem is not limited to power allocation alone.
 - Channel realism is improved with standardized-scenario-inspired presets:
   - `UMi_NLOS`
   - `UMa_LOS`
@@ -54,7 +56,7 @@ tests/
   - optional LOS/Rician component
 - Sensing is modeled as a separate round-trip channel with configurable processing gain, instead of reusing the communication link unchanged.
 - Default presets include communication and sensing processing gains so the standardized-scenario-inspired channel remains physically motivated while still producing informative Pareto fronts for algorithm analysis.
-- The sensing objective now supports either SNR-based utility or probabilistic detection utility (`Pd` at configured `Pfa`).
+- The sensing objective supports probabilistic detection utility (`Pd` at configured `Pfa`) by default, while legacy SNR utility remains available for compatibility.
 - Optional co-optimization of power and a normalized waveform/beam-pattern profile is supported through objective config flags.
 
 ## Assumptions
@@ -81,7 +83,7 @@ python .\scripts\run_algorithm_comparison.py
 python .\scripts\run_dynamic_algorithm_comparison.py
 ```
 
-Probabilistic detection mode (with optional waveform co-optimization):
+Probabilistic detection mode:
 
 ```powershell
 python .\scripts\run_algorithm_comparison_pd.py --integration-gain 0.02
@@ -89,12 +91,12 @@ python .\scripts\run_pareto_pd.py --integration-gain 0.02
 python .\scripts\run_dynamic_pd.py --integration-gain 0.02
 ```
 
-Enable joint power + waveform co-optimization by adding `--waveform`:
+Disable waveform co-optimization only if you want the legacy power-only variant:
 
 ```powershell
-python .\scripts\run_algorithm_comparison_pd.py --integration-gain 0.02 --waveform
-python .\scripts\run_pareto_pd.py --integration-gain 0.02 --waveform
-python .\scripts\run_dynamic_pd.py --integration-gain 0.02 --waveform
+python .\scripts\run_algorithm_comparison_pd.py --integration-gain 0.02 --no-waveform
+python .\scripts\run_pareto_pd.py --integration-gain 0.02 --no-waveform
+python .\scripts\run_dynamic_pd.py --integration-gain 0.02 --no-waveform
 ```
 
 This generates:

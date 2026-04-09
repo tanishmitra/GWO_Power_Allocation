@@ -33,9 +33,17 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--waveform",
+        dest="waveform",
         action="store_true",
-        help="Enable joint power + waveform co-optimization.",
+        help="Enable joint power + waveform co-optimization (default: on).",
     )
+    parser.add_argument(
+        "--no-waveform",
+        dest="waveform",
+        action="store_false",
+        help="Disable joint power + waveform co-optimization.",
+    )
+    parser.set_defaults(waveform=True)
     return parser.parse_args()
 
 

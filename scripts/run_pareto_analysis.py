@@ -1,4 +1,4 @@
-"""Run a modular Pareto analysis study for the ISAC paper revision."""
+"""Run the default detection-probability and waveform-aware Pareto study."""
 
 from __future__ import annotations
 

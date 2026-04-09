@@ -36,9 +36,17 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--waveform",
+        dest="waveform",
         action="store_true",
-        help="Enable joint power + waveform co-optimization.",
+        help="Enable joint power + waveform co-optimization (default: on).",
     )
+    parser.add_argument(
+        "--no-waveform",
+        dest="waveform",
+        action="store_false",
+        help="Disable joint power + waveform co-optimization.",
+    )
+    parser.set_defaults(waveform=True)
     return parser.parse_args()
 
 
@@ -77,7 +85,7 @@ def main() -> None:
     print(f"Integration gain: {args.integration_gain}")
     print(f"Waveform co-optimization: {args.waveform}")
     print("")
-    print("Algorithm | Mean Obj | Std Obj | Mean Rate | Mean SNR (dB) | Mean Pd | Mean Runtime (ms)")
+    print("Algorithm | Mean Obj | Std Obj | Mean Rate | Mean Pd | Mean SNR (dB) | Mean Runtime (ms)")
     print("-" * 100)
     for item in summary.aggregates:
         print(
@@ -85,8 +93,8 @@ def main() -> None:
             f"{item.mean_objective:8.3f} | "
             f"{item.std_objective:7.3f} | "
             f"{item.mean_rate_bps_hz:9.3f} | "
-            f"{item.mean_sensing_snr_db:13.3f} | "
             f"{item.mean_sensing_detection_probability:7.3f} | "
+            f"{item.mean_sensing_snr_db:13.3f} | "
             f"{item.mean_runtime_ms:16.3f}"
         )
 
