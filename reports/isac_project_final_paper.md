@@ -80,7 +80,7 @@ The extended model was integrated across the full codebase:
    - Added sensing-mode and waveform-co-optimization configuration fields.
    - Added decision-space helpers for equal/random initialization and repair.
 2. Solvers:
-   - Updated GWO, PSO, DE, SA, SFO, POA, SLSQP, and NSGA-II to use the new decision dimension transparently.
+    - Updated GWO, PSO, DE, SA, SFO, POA, and NSGA-II to use the new decision dimension transparently.
    - Solvers now return power allocation plus waveform profile (when enabled).
 3. Pareto utilities:
    - Dominance checks now use sensing utility (generic across SNR and `Pd` modes).

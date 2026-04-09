@@ -8,7 +8,6 @@ from .poa import PelicanOptimizer
 from .pso import ParticleSwarmOptimizer
 from .sa import SimulatedAnnealingOptimizer
 from .sfo import StarfishOptimizer
-from .slsqp import SLSQPOptimizer
 
 __all__ = [
     "DifferentialEvolutionOptimizer",
@@ -16,7 +15,6 @@ __all__ = [
     "NSGA2Optimizer",
     "ParticleSwarmOptimizer",
     "PelicanOptimizer",
-    "SLSQPOptimizer",
     "SimulatedAnnealingOptimizer",
     "StarfishOptimizer",
     "equal_power_result",

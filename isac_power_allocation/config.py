@@ -76,13 +76,6 @@ class NSGA2Hyperparameters:
 
 
 @dataclass(frozen=True)
-class SLSQPHyperparameters:
-    restarts: int = 1
-    max_iterations: int = 120
-    seed: int = 5
-
-
-@dataclass(frozen=True)
 class PSOHyperparameters:
     population_size: int = 30
     iterations: int = 50
@@ -140,7 +133,6 @@ class ExperimentConfig:
     link_budget: LinkBudgetConfig = field(default_factory=LinkBudgetConfig)
     simulation: SimulationConfig = field(default_factory=SimulationConfig)
     objective: ObjectiveConfig = field(default_factory=ObjectiveConfig)
-    slsqp: SLSQPHyperparameters = field(default_factory=SLSQPHyperparameters)
     pso: PSOHyperparameters = field(default_factory=PSOHyperparameters)
     de: DEHyperparameters = field(default_factory=DEHyperparameters)
     sa: SAHyperparameters = field(default_factory=SAHyperparameters)

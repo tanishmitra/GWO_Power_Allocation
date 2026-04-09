@@ -16,7 +16,6 @@ from isac_power_allocation.config import (
     SAHyperparameters,
     SFOHyperparameters,
     SimulationConfig,
-    SLSQPHyperparameters,
 )
 from isac_power_allocation.experiments.runner import run_dynamic_algorithm_comparison
 from isac_power_allocation.objectives import ISACSnapshotProblem
@@ -27,7 +26,6 @@ from isac_power_allocation.optimizers.poa import PelicanOptimizer
 from isac_power_allocation.optimizers.pso import ParticleSwarmOptimizer
 from isac_power_allocation.optimizers.sa import SimulatedAnnealingOptimizer
 from isac_power_allocation.optimizers.sfo import StarfishOptimizer
-from isac_power_allocation.optimizers.slsqp import SLSQPOptimizer
 from isac_power_allocation.pareto import extract_non_dominated_results
 
 
@@ -66,7 +64,6 @@ class OptimizerTests(unittest.TestCase):
 
     def test_additional_solvers_return_feasible_solutions(self) -> None:
         solvers = [
-            SLSQPOptimizer(SLSQPHyperparameters(restarts=2, max_iterations=40, seed=1)),
             ParticleSwarmOptimizer(PSOHyperparameters(population_size=10, iterations=8, seed=2)),
             DifferentialEvolutionOptimizer(DEHyperparameters(population_size=10, iterations=8, seed=3)),
             SimulatedAnnealingOptimizer(SAHyperparameters(iterations=60, seed=4)),
@@ -86,7 +83,6 @@ class OptimizerTests(unittest.TestCase):
             link_budget=LinkBudgetConfig(total_power_w=2.0, per_subcarrier_max_power_w=0.5),
             simulation=SimulationConfig(num_time_steps=3, random_seed=9),
             objective=ObjectiveConfig(default_alpha=0.5),
-            slsqp=SLSQPHyperparameters(restarts=1, max_iterations=20, seed=1),
             pso=PSOHyperparameters(population_size=8, iterations=4, seed=2),
             de=DEHyperparameters(population_size=8, iterations=4, seed=3),
             sa=SAHyperparameters(iterations=20, seed=4),
@@ -96,7 +92,7 @@ class OptimizerTests(unittest.TestCase):
         )
         summary = run_dynamic_algorithm_comparison(config)
         self.assertEqual(summary.num_time_steps, 3)
-        self.assertEqual(len(summary.aggregates), 7)
+        self.assertEqual(len(summary.aggregates), 6)
 
     def test_probabilistic_detection_with_waveform_cooptimization(self) -> None:
         problem = ISACSnapshotProblem(

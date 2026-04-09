@@ -20,7 +20,6 @@ from ..optimizers.poa import PelicanOptimizer
 from ..optimizers.pso import ParticleSwarmOptimizer
 from ..optimizers.sa import SimulatedAnnealingOptimizer
 from ..optimizers.sfo import StarfishOptimizer
-from ..optimizers.slsqp import SLSQPOptimizer
 from ..pareto import extract_non_dominated_results, run_weighted_sum_sweep
 
 
@@ -265,7 +264,6 @@ def run_algorithm_comparison(config: ExperimentConfig) -> tuple[AlgorithmCompari
     alpha = config.objective.default_alpha
 
     solvers = [
-        SLSQPOptimizer(config.slsqp),
         ParticleSwarmOptimizer(config.pso),
         DifferentialEvolutionOptimizer(config.de),
         SimulatedAnnealingOptimizer(config.sa),
@@ -298,7 +296,6 @@ def run_dynamic_algorithm_comparison(config: ExperimentConfig) -> DynamicCompari
     alpha = config.objective.default_alpha
 
     solver_builders = [
-        ("SLSQP", lambda: SLSQPOptimizer(config.slsqp)),
         ("PSO", lambda: ParticleSwarmOptimizer(config.pso)),
         ("DE", lambda: DifferentialEvolutionOptimizer(config.de)),
         ("SA", lambda: SimulatedAnnealingOptimizer(config.sa)),
