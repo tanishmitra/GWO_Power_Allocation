@@ -81,6 +81,22 @@ python .\scripts\run_algorithm_comparison.py
 python .\scripts\run_dynamic_algorithm_comparison.py
 ```
 
+Probabilistic detection mode (with optional waveform co-optimization):
+
+```powershell
+python .\scripts\run_algorithm_comparison_pd.py --integration-gain 0.02
+python .\scripts\run_pareto_pd.py --integration-gain 0.02
+python .\scripts\run_dynamic_pd.py --integration-gain 0.02
+```
+
+Enable joint power + waveform co-optimization by adding `--waveform`:
+
+```powershell
+python .\scripts\run_algorithm_comparison_pd.py --integration-gain 0.02 --waveform
+python .\scripts\run_pareto_pd.py --integration-gain 0.02 --waveform
+python .\scripts\run_dynamic_pd.py --integration-gain 0.02 --waveform
+```
+
 This generates:
 
 - `outputs/pareto_front.png`
@@ -91,6 +107,14 @@ This generates:
 - `outputs/dynamic_algorithm_comparison.png`
 - `outputs/dynamic_algorithm_comparison_summary.json`
 - `outputs/dynamic_objective_traces.png`
+- `outputs/pareto_front_pd*.png`
+- `outputs/channel_snapshot_pd*.png`
+- `outputs/pareto_summary_pd*.json`
+- `outputs/algorithm_comparison_pd*.png`
+- `outputs/algorithm_comparison_pd*_summary.json`
+- `outputs/dynamic_algorithm_comparison_pd*.png`
+- `outputs/dynamic_algorithm_comparison_summary_pd*.json`
+- `outputs/dynamic_objective_traces_pd*.png`
 
 ## Test
 
