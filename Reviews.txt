@@ -1,0 +1,157 @@
+Reviewer #1 ->
+
+1. Strength and Weakness of the Contribution
+
+Strengths:
+
+Novel Metric Integration: The shift from traditional SNR-based metrics to detection probability (P_d) as a primary optimization variable is a significant improvement that aligns more closely with real-world sensing requirements.
+
+Multi-Algorithm Benchmarking: The study provides a rigorous comparison across multiple meta-heuristic solvers (GWO, PSO, DE, etc.), offering a transparent view of solver behavior in a complex design space.
+
+Realistic Modeling: The use of the UMi_NLOS scenario and time-varying channel snapshots adds practical depth that is often missing from purely theoretical ISAC papers.
+
+Pareto Analysis: The inclusion of a Pareto frontier demonstrates the tangible benefits of waveform co-optimization over traditional power-only allocation methods like water-filling.
+
+Weaknesses:
+
+Statistical Robustness: The results rely on a fixed-seed setup, which, as the authors admit, limits the statistical significance of the rankings between high-performing solvers like GWO and PSO.
+
+Simplified Sensing Model: The exclusion of clutter, multi-target interference, and noise-clutter covariance limits the immediate applicability of the results to advanced radar receiver designs.
+
+Complexity vs. Latency: While meta-heuristics perform well, the paper lacks a deep discussion on the practical implementation of these high-evaluation-count algorithms in ultra-low-latency 6G environments.
+
+
+2. Contribution
+
+The article contributes a weighted rate-detection formulation for OFDM-based Integrated Sensing and Communication (ISAC). Key contributions include:
+An expanded design space that treats waveform shaping as a direct variable alongside power allocation.
+A reproducible benchmark of optimization behaviors on a realistic 3GPP TR 38.901 motivated channel.
+Empirical evidence that detection-aware waveform co-design can nearly double detection probability at specific rate-focused operating points compared to traditional water-filling.
+
+
+3. Significance of Topic, Presentation, Technical Contribution and Originality
+
+Significance of Topic: High. ISAC is a cornerstone of 6G research, and optimizing the sensing-communication tradeoff is a critical industry challenge.
+Presentation: Excellent. The paper is well-structured, the mathematical modeling (Eq. 1-6) is clear, and the graphical representations of the Pareto frontier and waveform profiles are highly informative.
+
+Technical Contribution: Substantial. The joint co-design of power and normalized waveform profiles using detection probability offers a more nuanced control mechanism than standard SNR proxies.
+
+Originality: Moderate-to-High. While waveform shaping in ISAC is not new, the specific application of meta-heuristic comparison driven by P_d in a dynamic UMi_NLOS setting is a fresh perspective.
+
+
+4. Overall Comments
+This is a high-quality submission that effectively bridges the gap between signal processing theory and optimization meta-heuristics. The "spectrum emphasis" interpretation of the waveform profile provides a clear physical intuition for the mathematical results. The authors are commendably transparent about their modeling simplifications and the limitations of their statistical scope. The paper successfully proves its thesis: waveform co-optimization provides a significantly more useful ISAC tradeoff than power-only allocation.
+
+
+
+#Reviewer 2 ->
+
+1. Strength and Weakness of the Contribution
+
+The paper addresses an important and emerging problem in Integrated Sensing and Communication (ISAC) systems by focusing on detection probability instead of conventional sensing SNR metrics.
+The study introduces joint power and waveform co-optimization, which expands the design space beyond traditional power-only allocation approaches.
+The work provides a detailed comparative benchmark of multiple optimization algorithms including GWO, PSO, DE, SA, SFO, POA, and NSGA-II under the same experimental conditions.
+The inclusion of Pareto analysis effectively demonstrates the sensing–communication tradeoff and highlights the practical benefits of waveform co-optimization.
+The manuscript clearly presents system assumptions, optimization objectives, mathematical formulations, and reproducibility settings, improving transparency and research clarity.
+
+The sensing model is highly simplified, considering only a single point target without clutter, interference, or multi-target effects, which limits real-world applicability.
+The experiments are conducted using fixed random seeds and limited snapshots, reducing the statistical significance and generalizability of the reported results.
+The work mainly evaluates optimization behavior and does not incorporate practical detector-side implementations such as matched filtering or MMSE-based receiver processing.
+The manuscript occasionally contains repetitive explanations and lengthy descriptive discussions that could be made more concise and technically focused.
+The paper lacks comparison with recent deep learning or reinforcement learning based ISAC optimization approaches, which could strengthen the benchmarking study.
+
+
+2. Contribution
+
+The paper proposes a detection-probability-driven ISAC resource allocation framework with joint power and waveform co-design.
+It formulates a weighted sensing–communication optimization problem using detection probability as the sensing metric.
+The study introduces waveform shaping as an explicit optimization variable for balancing sensing and communication performance.
+The work benchmarks multiple metaheuristic optimization algorithms in a realistic UMi_NLOS OFDM environment.
+The research demonstrates that waveform co-optimization significantly improves the sensing–communication Pareto tradeoff compared to traditional power-only methods such as water-filling.
+
+
+3. Significance of Topic, Presentation, Technical Contribution and Originality
+
+The topic is highly significant for future 5G/6G wireless systems where ISAC is expected to play a major role in simultaneous communication and sensing applications.
+The technical contribution is meaningful because it shifts the sensing objective from indirect SNR-based metrics to detection probability, which is more practically relevant for detection-oriented systems.
+The inclusion of waveform shaping together with power allocation adds originality and improves the flexibility of ISAC resource optimization.
+The paper presents comprehensive mathematical modeling, optimization settings, and evaluation procedures, making the study reproducible and technically sound.
+Although the presentation is generally clear, some sections could be shortened and refined to improve readability and reduce repetition.
+
+
+4. Overall Comments
+
+The paper presents a focused and technically relevant study on detection-aware resource allocation in ISAC systems.
+The proposed joint power and waveform co-optimization framework provides meaningful insights into sensing–communication tradeoffs.
+The comparative evaluation of multiple optimization techniques strengthens the contribution and offers useful benchmarking results for future ISAC research.
+The work would benefit from more realistic sensing models, statistical validation across multiple runs, and inclusion of practical detector-side baselines.
+Overall, the paper demonstrates good technical depth, clear experimental methodology, and promising research contribution, making it a valuable study with scope for further extension and refinement.
+
+
+
+
+#Reviewer 3 ->
+
+1. Strength and Weakness of the Contribution
+
+Strengths:
+
+Advanced Metric Shift: Replaces the standard but limited SNR-based sensing metric with Detection Probability ($P_d$), making the sensing objective more physically meaningful for real-world radar applications.
+
+Joint Optimization: Successfully co-designs power allocation and waveform shaping, treating the waveform profile as a direct design variable rather than an afterthought.
+
+Effective Trade-off Management: Uses the Grey Wolf Optimizer (GWO) to map a clear Pareto front, allowing for precise selection between sensing-focused and communication-focused performance.
+
+Superior Performance over Baselines: Demonstrates that the proposed method can double detection probability compared to traditional "Water-filling" algorithms while maintaining nearly the same communication rate.
+
+Scenario-Specific Rigor: Validates the model using a standardized UMi_NLOS (Urban Micro Non-Line-of-Sight) scenario, ensuring the results are relevant to 5G/6G channel modeling.
+
+Weaknesses:
+
+Heuristic Dependency: The reliance on Grey Wolf Optimizer (GWO) means the solution is meta-heuristic; it may require multiple runs to ensure global convergence compared to convex optimization.
+Computational Complexity: Jointly optimizing power and waveform across multiple subcarriers is computationally more demanding than power-only allocation.
+
+Fixed False-Alarm Rate: The study fixes the False-Alarm Probability ($P_{fa}$) at $10^{-3}$; performance characteristics might shift significantly if the $P_{fa}$ requirements are tightened for high-security applications.
+
+Limited Hardware Context: While the theory is sound, the paper does not deeply explore the hardware constraints of the transmitter, such as the Peak-to-Average Power Ratio (PAPR) of the co-designed waveforms.
+
+Environmental Sensitivity: The results are highly dependent on the specific NLOS channel parameters; performance in Line-of-Sight (LOS) or high-mobility scenarios is not extensively detailed.
+
+
+2. Contribution
+
+Detection-Aware Formulation: Provides a new mathematical framework for ISAC (Integrated Sensing and Communication) that prioritizes the probability of detecting a target over mere signal strength.
+
+Waveform Profile Variable: Contributes a "normalized waveform profile" variable that allows for subcarrier-level tuning of the sensing signal.
+
+Pareto Trade-off Analysis: Offers an empirical mapping of the tension between Spectral Efficiency (bps/Hz) and Detection Probability, providing a decision-making tool for network operators.
+
+Comparison to Water-filling: Contributes a technical proof that traditional communication-centric power allocation (Water-filling) is significantly suboptimal for integrated sensing tasks.
+
+ISAC Resource Blueprint: Provides a reusable algorithmic structure for resource allocation in time-varying OFDM channels.
+
+
+3. Significance of Topic, Presentation, Technical Contribution and Originality
+
+Significance of Topic: ISAC is a cornerstone of 6G technology, turning communication networks into giant sensors for traffic monitoring, gesture recognition, and environmental mapping.
+
+Quality of Presentation: The paper effectively utilizes Pareto curves and performance tables to illustrate the "sensing-communication" conflict, making technical trade-offs easy to visualize.
+
+Technical Contribution: The co-design of power and waveform—rather than optimizing them sequentially—represents a sophisticated technical leap in signal processing.
+
+Originality of Metric: Using $P_d$ as a direct optimization objective in a weighted-rate formulation is an original departure from the "SNR-proxy" approach common in many ISAC papers.
+
+Optimization Versatility: The adaptation of the Grey Wolf Optimizer for this specific multi-objective ISAC problem shows original application of bio-inspired algorithms to telecommunications.
+
+
+4. Overall Comments
+
+Highly Relevant for 6G: This research directly addresses one of the primary challenges of future networks: how to share a limited spectrum between two competing functions without failing at either.
+
+Validated Efficiency: The fact that the model can double $P_d$ at the rate-focused end proves that current allocation standards are leaving significant "sensing performance" on the table.
+
+Practical Optimization Strategy: By using GWO, the researchers offer a pathway to solve non-convex ISAC problems that are typically difficult for standard solvers.
+
+Balanced Design: The paper excels at maintaining a "dual-purpose" mindset, ensuring that the communication rate ($22.76~bps/Hz$) remains competitive even when sensing is introduced.
+
+Strong Foundation for Future Work: This work paves the way for adding more variables to the co-design, such as beamforming or multi-user interference management.

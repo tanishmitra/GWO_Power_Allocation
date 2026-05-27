@@ -87,7 +87,7 @@
       "metadata": {
         "population_size": 30,
         "iterations": 50,
-        "runtime_ms": 837.3248
+        "runtime_ms": 720.7306
       }
     },
     {
@@ -173,7 +173,7 @@
       "metadata": {
         "population_size": 30,
         "iterations": 50,
-        "runtime_ms": 640.5757
+        "runtime_ms": 794.0503
       }
     },
     {
@@ -259,7 +259,7 @@
       "metadata": {
         "population_size": 30,
         "iterations": 50,
-        "runtime_ms": 761.6971
+        "runtime_ms": 796.0014
       }
     },
     {
@@ -345,7 +345,7 @@
       "metadata": {
         "population_size": 30,
         "iterations": 50,
-        "runtime_ms": 704.1502
+        "runtime_ms": 824.5976
       }
     },
     {
@@ -431,7 +431,7 @@
       "metadata": {
         "population_size": 30,
         "iterations": 50,
-        "runtime_ms": 671.5058
+        "runtime_ms": 795.6055
       }
     },
     {
@@ -516,7 +516,7 @@
       ],
       "metadata": {
         "iterations": 1000,
-        "runtime_ms": 381.8158
+        "runtime_ms": 442.7943
       }
     }
   ]
