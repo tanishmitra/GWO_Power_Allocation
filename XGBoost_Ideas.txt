@@ -1,0 +1,9 @@
+
+**Proposed Working structure with XGBoost ->
+
+Step 1: Modify existing GWO simulation to export CSV data
+Step 2: Train XGBoost model on the CSV
+Step 3: Plot predicted vs actual
+Step 4: Plot feature importance
+Step 5: Add SHAP plots if the first model works well
+Step 6: Use trained model for heatmaps/surface plots
