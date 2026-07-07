@@ -1,0 +1,18 @@
+{
+  "dataset_path": "outputs\\gwo_xgboost_dataset.csv",
+  "model_path": "outputs\\xgboost\\xgboost_weighted_objective.json",
+  "feature_metadata_path": "outputs\\xgboost\\xgboost_weighted_objective_features.json",
+  "prediction_path": "outputs\\xgboost\\xgboost_weighted_objective_predictions.csv",
+  "target_column": "weighted_objective",
+  "row_count": 80,
+  "feature_count": 102,
+  "train_count": 60,
+  "test_count": 20,
+  "random_seed": 42,
+  "test_fraction": 0.25,
+  "mae": 2.322009903927217,
+  "rmse": 3.444707058194789,
+  "r2": 0.9930108021011048,
+  "target_mean": 77.38185404710794,
+  "target_std": 49.64759149387137
+}
