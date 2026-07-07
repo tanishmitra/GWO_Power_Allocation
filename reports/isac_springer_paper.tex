@@ -8,9 +8,9 @@
 \usepackage{array}
 \usepackage{hyperref}
 
-\graphicspath{{../outputs/}}
+\graphicspath{{../outputs/}{../outputs/xgboost/}}
 
-\title{Detection-Probability-Oriented Waveform Co-Optimization for ISAC Power Allocation: A \texttt{UMi\_NLOS} Case Study}
+\title{Detection-Probability-Oriented Waveform Co-Optimization and XGBoost Surrogate Analysis for ISAC Power Allocation}
 
 \author{Anonymous Author}
 \institute{Prepared from the ISAC Power Allocation project repository}
@@ -19,8 +19,8 @@
 \maketitle
 
 \begin{abstract}
-This paper replaces the usual SNR-based sensing metric in an integrated sensing and communication (ISAC) power-allocation problem with detection probability, so that waveform shaping becomes a direct design variable rather than a side detail. We study a weighted rate--detection formulation over a time-varying OFDM channel and optimize both power and a normalized waveform profile. The experiments use a \texttt{UMi\_NLOS} scenario with false-alarm probability $P_{\mathrm{fa}}=10^{-3}$, which defines the detection regime for the reported $P_d$ values. In the Pareto study, Grey Wolf Optimizer (GWO) spans the tradeoff from a sensing-focused point with $P_d=0.892$ at 10.70 bps/Hz to a communication-focused point with 22.76 bps/Hz and $P_d=0.212$. Compared with water-filling, which reaches 22.50 bps/Hz but only $P_d=0.114$, the proposed formulation keeps nearly the same rate while almost doubling detection probability at the rate-focused end, and it reaches a much stronger sensing point at the opposite end. This suggests that detection-aware waveform co-optimization gives a more useful ISAC tradeoff than power-only allocation.
-\keywords{ISAC \and detection probability \and waveform co-optimization \and UMi\_NLOS \and Pareto analysis}
+This paper replaces the usual SNR-based sensing metric in an integrated sensing and communication (ISAC) power-allocation problem with detection probability, so that waveform shaping becomes a direct design variable rather than a side detail. We study a weighted rate--detection formulation over a time-varying OFDM channel and optimize both power and a normalized waveform profile. The experiments use a \texttt{UMi\_NLOS} scenario with false-alarm probability $P_{\mathrm{fa}}=10^{-3}$, which defines the detection regime for the reported $P_d$ values. In the Pareto study, Grey Wolf Optimizer (GWO) spans the tradeoff from a sensing-focused point with $P_d=0.892$ at 10.70 bps/Hz to a communication-focused point with 22.76 bps/Hz and $P_d=0.212$. We further export GWO-generated optimization data across four channel scenarios and train an XGBoost surrogate to predict the weighted objective from channel and system features. The surrogate reaches $R^2=0.993$ on a held-out split of the current dataset, and feature-importance plus Tree SHAP plots expose which channel features most influence the learned optimized performance. The result is a combined optimization-and-explanation workflow: GWO produces allocation decisions, while XGBoost summarizes and interprets the resulting performance landscape.
+\keywords{ISAC \and detection probability \and waveform co-optimization \and XGBoost \and surrogate modeling \and SHAP}
 \end{abstract}
 
 \section{Introduction}
@@ -34,6 +34,8 @@ The main contributions are:
   \item a normalized waveform profile that is optimized together with power,
   \item a comparison of several search algorithms on the same channel sequence,
   \item a Pareto-style view of the tradeoff between rate and sensing quality,
+  \item an exported GWO dataset for surrogate modeling across multiple channel scenarios,
+  \item an XGBoost regression surrogate with feature-importance and Tree SHAP interpretation,
   \item a clear discussion of what the model does and does not include.
 \end{itemize}
 
@@ -44,12 +46,15 @@ Waveform design is also a common theme in OFDM-based ISAC. Prior work has shown 
 
 The channel side of ISAC also matters. Standard channel descriptions such as 3GPP TR 38.901 motivate scenario-based studies instead of generic fading only \cite{3gpp38901}. That is why this paper uses \texttt{UMi\_NLOS} and a time-varying channel sequence.
 
+The added machine-learning layer follows a different purpose from the optimizer comparison. Gradient-boosted trees, and XGBoost in particular, are widely used for tabular regression and feature-ranking tasks \cite{chen2016xgboost}. In this paper, XGBoost is used after GWO has generated optimized results. It acts as a surrogate and explanation model, not as a replacement optimizer. Tree SHAP contribution values are then used to summarize how individual input features push the learned objective prediction up or down \cite{lundberg2017shap}.
+
 The scope is intentionally limited:
 \begin{itemize}
   \item one target return is modeled on the sensing side,
   \item clutter and multi-target effects are not modeled,
   \item the static study uses one representative snapshot,
   \item the paper compares optimization methods, not detector implementations.
+  \item the XGBoost results are trained on the exported simulation dataset and should be read as surrogate-analysis evidence, not as an independent physical model.
 \end{itemize}
 
 \section{System Model}
@@ -175,6 +180,35 @@ All solvers are run with fixed random seeds, as listed in Table~\ref{tab:setting
 \subsection{Complexity in plain language}
 All methods scale mainly with the number of objective evaluations. In simple terms, more population members and more iterations mean more evaluations and more runtime. NSGA-II also needs additional sorting work in each generation, so it is naturally heavier than a single weighted-sum run. The runtime values in this paper should therefore be read as practical wall-clock indicators, not as a strict proof of theoretical complexity.
 
+\subsection{XGBoost surrogate-analysis protocol}
+After generating optimization results, we export a supervised-learning dataset from GWO runs. Each row corresponds to one channel snapshot and contains scenario parameters, OFDM/link-budget settings, channel-gain statistics, per-subcarrier communication gains, per-subcarrier sensing gains, and the resulting GWO metrics. The current exported dataset contains 80 rows: four channel scenarios with 20 time snapshots each. The scenarios are \texttt{ITU\_PedB}, \texttt{UMa\_LOS}, \texttt{UMi\_NLOS}, and \texttt{WINNER\_A1}.
+
+The XGBoost model is trained to predict the GWO weighted objective. To avoid leakage, direct outcome columns are excluded from the input matrix, including the objective itself, rate, sensing SNR, detection probability, runtime, optimization-history values, optimized power allocation, and optimized waveform values. The model therefore learns from channel and system descriptors rather than from the answer columns.
+
+\begin{table}[t]
+\centering
+\caption{XGBoost surrogate setup used for the exported GWO dataset.}
+\label{tab:xgboostsetup}
+\small
+\begin{tabular}{lc}
+\toprule
+Item & Value \\
+\midrule
+Dataset rows & 80 \\
+Input features & 102 \\
+Target & GWO weighted objective \\
+Train/test split & 60 / 20 rows \\
+Test fraction & 0.25 \\
+Boosting rounds & 300 \\
+Maximum tree depth & 3 \\
+Learning rate & 0.05 \\
+Random seed & 42 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The trained model is saved as a JSON booster, while separate files store feature metadata, held-out predictions, and evaluation metrics. This makes the analysis reproducible and allows the plotting scripts to create predicted-versus-actual, feature-importance, and SHAP summary figures without re-running GWO.
+
 \section{Results and Discussion}
 
 \subsection{Single-snapshot comparison}
@@ -290,12 +324,61 @@ The waveform variable should be read as a normalized spectral shaping profile, n
 \label{fig:waveforms}
 \end{figure}
 
+\subsection{XGBoost surrogate and interpretability results}
+The XGBoost surrogate is evaluated on a held-out split of the exported GWO dataset. Table~\ref{tab:xgboostresults} summarizes the prediction quality. The high $R^2$ value shows that, for the current dataset, the channel and system descriptors contain enough information for the model to reproduce the GWO weighted objective with small error. This does not mean XGBoost has replaced GWO; it means that the GWO-generated performance landscape is learnable from the exported features.
+
+\begin{table}[t]
+\centering
+\caption{Held-out XGBoost surrogate accuracy for predicting the GWO weighted objective.}
+\label{tab:xgboostresults}
+\small
+\begin{tabular}{lc}
+\toprule
+Metric & Value \\
+\midrule
+Mean absolute error (MAE) & 2.322 \\
+Root mean square error (RMSE) & 3.445 \\
+$R^2$ score & 0.993 \\
+Target mean & 77.382 \\
+Target standard deviation & 49.648 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:xgbpred} compares predicted and actual held-out objective values. Most points lie close to the ideal diagonal, which supports using the trained model as a compact surrogate for analysis and visualization.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{xgboost_predicted_vs_actual.png}
+\caption{Held-out XGBoost predictions compared with the corresponding GWO weighted objective values.}
+\label{fig:xgbpred}
+\end{figure}
+
+Feature importance and SHAP analysis give the model an explanatory role. The gain-based importance plot in Figure~\ref{fig:xgbimportance} ranks features by their average contribution to reducing tree-split loss. It gives a global view of which channel or scenario descriptors the boosted trees use most strongly.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.82\textwidth]{xgboost_feature_importance.png}
+\caption{XGBoost feature-importance ranking for the weighted-objective surrogate.}
+\label{fig:xgbimportance}
+\end{figure}
+
+Figure~\ref{fig:xgbshap} provides a SHAP-style summary using XGBoost's built-in Tree SHAP contribution values. Unlike the gain plot, which only ranks global importance, SHAP values show whether high or low feature values tend to push the predicted optimized objective upward or downward. This helps connect the learned surrogate back to the physical channel descriptors used in the ISAC simulation.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.82\textwidth]{xgboost_shap_summary.png}
+\caption{Tree SHAP summary for the XGBoost surrogate. Positive SHAP values increase the predicted weighted objective, while negative values reduce it.}
+\label{fig:xgbshap}
+\end{figure}
+
 \subsection{What the results say}
 Taken together, the experiments support three careful conclusions:
 \begin{enumerate}
   \item \textbf{GWO and PSO perform comparably under the fixed-seed protocol.} GWO is slightly ahead on the reported weighted score in both the static and dynamic comparisons, but the gap is small and should be read as an indicative ranking rather than a statistically proven win.
   \item \textbf{PSO is a strong alternative when runtime matters.} It matches GWO closely on the combined score and can slightly exceed it on snapshot $P_d$, while tending to be faster in the dynamic study.
   \item \textbf{Waveform co-optimization matters.} The non-flat waveform profiles and the wider tradeoff range show that the added variable changes the design space in a meaningful way.
+  \item \textbf{The GWO performance landscape is learnable.} XGBoost predicts the exported GWO weighted objective accurately on the held-out split, and its importance and SHAP plots make the learned dependence on channel features easier to inspect.
 \end{enumerate}
 
 These are benchmark conclusions, not universal claims. They hold for the \texttt{UMi\_NLOS} scenario and the chosen settings.
@@ -310,12 +393,14 @@ This study is intentionally simple in a few places. Those simplifications do not
   \item The detection-probability mapping uses an effective integration parameter that is useful for comparison but not derived from a full detector model.
   \item The paper does not include matched-filter, Neyman--Pearson, or MMSE beamforming baselines.
   \item The algorithms are compared as search methods for the same weighted objective, not as complete sensing receivers.
+  \item The XGBoost surrogate is trained on 80 exported rows, so the reported accuracy is best read as a first proof of learnability rather than a final generalization claim.
+  \item The SHAP summary explains the trained surrogate model, not the physical system directly; physical interpretation should therefore be tied back to the channel model and exported features.
 \end{itemize}
 
-These points should be stated clearly in the manuscript. Doing so does not weaken the paper; it makes it more credible. The natural future steps are Monte Carlo averaging, more detailed sensing physics, and additional baselines that operate on the detector side rather than only on the allocation side.
+These points should be stated clearly in the manuscript. Doing so does not weaken the paper; it makes it more credible. The natural future steps are Monte Carlo averaging, more detailed sensing physics, additional baselines that operate on the detector side rather than only on the allocation side, larger XGBoost training datasets, cross-validation, and response-surface plots generated from the trained surrogate.
 
 \section{Conclusion}
-This paper presents a small but focused ISAC case study for the \texttt{UMi\_NLOS} scenario. The main message is that detection probability and waveform shaping should be treated as first-class design variables if the sensing task is detection-oriented. Under the fixed-seed protocol used here, GWO has a slight edge on the weighted objective and PSO is a close and often faster alternative; power-only baselines such as water-filling remain strong on rate but weak on detection. The Pareto endpoints and the non-flat optimized waveform profiles support the practical value of detection-aware waveform co-optimization.
+This paper presents a focused ISAC case study for detection-probability-oriented power and waveform co-optimization. The main message is that detection probability and waveform shaping should be treated as first-class design variables if the sensing task is detection-oriented. Under the fixed-seed protocol used here, GWO has a slight edge on the weighted objective and PSO is a close and often faster alternative; power-only baselines such as water-filling remain strong on rate but weak on detection. The Pareto endpoints and the non-flat optimized waveform profiles support the practical value of detection-aware waveform co-optimization. The added XGBoost layer extends the study from optimization to explanation: it learns the exported GWO objective with high held-out accuracy and provides feature-importance and SHAP plots that help identify which channel and system descriptors drive optimized performance.
 
 \clearpage
 \begin{thebibliography}{99}
@@ -342,6 +427,12 @@ Storn, R., Price, K.: Differential evolution: A simple and efficient heuristic f
 
 \bibitem{deb2002nsga2}
 Deb, K., Pratap, A., Agarwal, S., Meyarivan, T.: A fast and elitist multiobjective genetic algorithm: NSGA-II. IEEE Trans. Evol. Comput. \textbf{6}(2), 182--197 (2002)
+
+\bibitem{chen2016xgboost}
+Chen, T., Guestrin, C.: XGBoost: A scalable tree boosting system. In: Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, pp.~785--794. ACM (2016)
+
+\bibitem{lundberg2017shap}
+Lundberg, S.M., Lee, S.-I.: A unified approach to interpreting model predictions. In: Advances in Neural Information Processing Systems, vol.~30 (2017)
 
 \bibitem{kay_detection}
 Kay, S.M.: Fundamentals of Statistical Signal Processing, Volume~2: Detection Theory. Prentice Hall, Upper Saddle River (1998)
