@@ -36,6 +36,12 @@ def parse_args() -> argparse.Namespace:
         help="Prediction CSV saved during training.",
     )
     parser.add_argument(
+        "--dataset",
+        type=Path,
+        default=Path("outputs") / "gwo_xgboost_dataset.csv",
+        help="Original CSV dataset used to train the XGBoost model.",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("outputs") / "xgboost",
@@ -58,9 +64,11 @@ def main() -> None:
         feature_metadata_path=args.features,
         output_dir=args.output_dir,
         top_n_features=args.top_n,
+        dataset_path=args.dataset,
     )
     print(f"Saved predicted-vs-actual plot: {paths['predicted_vs_actual']}")
     print(f"Saved feature-importance plot: {paths['feature_importance']}")
+    print(f"Saved SHAP summary plot: {paths['shap_summary']}")
 
 
 if __name__ == "__main__":
