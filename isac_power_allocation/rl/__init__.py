@@ -1,5 +1,6 @@
 """Reinforcement-learning formulation helpers for ISAC allocation."""
 
+from .env import ISACPowerWaveformEnv
 from .mdp import (
     ISACAllocationMDP,
     MDPActionSpec,
@@ -9,6 +10,7 @@ from .mdp import (
 )
 
 __all__ = [
+    "ISACPowerWaveformEnv",
     "ISACAllocationMDP",
     "MDPActionSpec",
     "MDPObservationSpec",
