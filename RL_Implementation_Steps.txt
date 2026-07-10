@@ -1,0 +1,412 @@
+Reinforcement Learning Implementation Steps for ISAC Power-Waveform Allocation
+=============================================================================
+
+Goal
+----
+
+Add Reinforcement Learning (RL) to the existing ISAC project so an agent can learn
+power and waveform allocation policies over time-varying channel snapshots.
+
+The RL layer should not replace the current GWO/XGBoost work. It should extend it:
+
+GWO      -> optimization baseline
+XGBoost  -> surrogate and explainability layer
+RL       -> sequential decision-making policy for dynamic channels
+
+
+Step 1: Define the RL Problem
+-----------------------------
+
+Formulate the ISAC allocation task as a Markov Decision Process.
+
+State:
+
+- communication_gain for all subcarriers
+- sensing_gain for all subcarriers
+- time_index
+- optionally alpha, total power, noise power, and scenario indicator
+
+Action:
+
+- power allocation vector
+- waveform profile vector
+
+For 32 subcarriers, the action has 64 values:
+
+- first 32 values -> power allocation
+- next 32 values -> waveform profile
+
+Reward:
+
+Use the existing project objective:
+
+J = alpha * communication_rate + (1 - alpha) * gamma * sensing_utility
+
+Episode:
+
+- one episode = one dynamic channel sequence
+- default horizon = 20 time steps
+
+
+Step 2: Build a Gym-Style Environment
+-------------------------------------
+
+Create:
+
+isac_power_allocation/rl/env.py
+
+Main class:
+
+ISACPowerWaveformEnv
+
+The environment should provide:
+
+reset()
+step(action)
+
+The environment should reuse existing project code:
+
+- ExperimentConfig
+- TimeVaryingOFDMChannel
+- ISACSnapshotProblem
+- project_power_allocation
+
+At reset:
+
+1. Choose or generate a channel scenario.
+2. Build a sequence of channel snapshots.
+3. Set time_index = 0.
+4. Return the first observation.
+
+At step:
+
+1. Receive raw RL action.
+2. Split it into power and waveform parts.
+3. Repair/project the action into valid constraints.
+4. Compute reward using ISACSnapshotProblem.metrics().
+5. Move to the next channel snapshot.
+6. Return next_state, reward, done, and info.
+
+
+Step 3: Enforce Action Constraints
+----------------------------------
+
+The RL agent will output unconstrained numbers, so the environment must repair them.
+
+Power constraints:
+
+- p_k >= 0
+- sum(p_k) = total_power_w
+- p_k <= per_subcarrier_max_power_w, if enabled
+
+Waveform constraints:
+
+- w_k >= waveform_min_value
+- sum(w_k) = number of subcarriers
+
+Recommended approach:
+
+Use the existing repair logic from ISACSnapshotProblem where possible.
+
+
+Step 4: Add Environment Tests
+-----------------------------
+
+Create:
+
+tests/test_rl_env.py
+
+Test the following:
+
+- reset returns the correct observation shape
+- step accepts a random action
+- reward is finite
+- episode ends after 20 steps
+- repaired power allocation satisfies total power constraint
+- repaired waveform satisfies normalization constraint
+- reward matches the existing ISACSnapshotProblem objective calculation
+- same seed gives reproducible behavior
+
+
+Step 5: Add Simple Baselines
+----------------------------
+
+Before training RL, create baseline evaluation.
+
+Create:
+
+scripts/evaluate_rl_baselines.py
+
+Baselines:
+
+- random policy
+- equal power + flat waveform
+- GWO per snapshot
+- PSO per snapshot, optional
+
+Metrics:
+
+- mean weighted objective
+- mean communication rate
+- mean detection probability
+- mean sensing SNR
+- mean runtime per step
+
+This gives a sanity ladder:
+
+random policy < equal power < trained RL < or near GWO
+
+
+Step 6: Add RL Dependencies
+---------------------------
+
+Add these only when ready to train:
+
+gymnasium
+stable-baselines3
+torch
+tensorboard
+
+Recommended library:
+
+Stable-Baselines3
+
+Reason:
+
+It already provides tested PPO, SAC, TD3, DDPG, logging, and model saving.
+
+
+Step 7: Start with PPO
+----------------------
+
+Create:
+
+scripts/train_rl_agent.py
+
+Start with PPO because it is usually easier to stabilize.
+
+Example command:
+
+python scripts\train_rl_agent.py --algo ppo --scenario UMi_NLOS --steps 200000
+
+Initial training settings:
+
+- algorithm: PPO
+- scenario: UMi_NLOS
+- episode length: 20
+- alpha: 0.5
+- reward: weighted objective
+- total steps: 100k to 200k for first test
+
+Save outputs to:
+
+outputs/rl/
+
+
+Step 8: Debug on a Small Version First
+--------------------------------------
+
+Before using the full 32-subcarrier environment, test a smaller version:
+
+- 8 subcarriers
+- 5 time steps
+- one scenario
+
+This makes debugging faster.
+
+Once the reward curve improves, scale back to:
+
+- 32 subcarriers
+- 20 time steps
+- multiple scenarios
+
+
+Step 9: Add SAC After PPO Works
+-------------------------------
+
+After PPO is working, add SAC.
+
+Reason:
+
+SAC is well suited for continuous action spaces and may learn better policies
+for power and waveform control.
+
+Example command:
+
+python scripts\train_rl_agent.py --algo sac --scenario all --steps 1000000
+
+SAC should be compared against PPO after both are stable.
+
+
+Step 10: Save RL Models and Logs
+--------------------------------
+
+Save trained models:
+
+outputs/rl/models/ppo_isac_model.zip
+outputs/rl/models/sac_isac_model.zip
+
+Save logs:
+
+outputs/rl/logs/
+outputs/rl/tensorboard/
+
+Save summaries:
+
+outputs/rl/training_summary.json
+outputs/rl/evaluation_summary.json
+
+
+Step 11: Evaluate Trained RL Agents
+-----------------------------------
+
+Create:
+
+scripts/evaluate_rl_agent.py
+
+Compare:
+
+- PPO
+- SAC
+- GWO
+- PSO
+- equal power
+- random policy
+
+Evaluation metrics:
+
+- average weighted objective
+- average communication rate
+- average detection probability
+- average sensing SNR
+- average runtime per decision
+- constraint violation count
+
+
+Step 12: Generate RL Plots
+--------------------------
+
+Recommended plots:
+
+- learning curve: reward vs training steps
+- RL vs GWO objective comparison
+- RL vs PSO objective comparison
+- dynamic objective trace over 20 time steps
+- communication rate trace
+- detection probability trace
+- learned power allocation profile
+- learned waveform profile
+
+Suggested output files:
+
+outputs/rl/rl_learning_curve.png
+outputs/rl/rl_vs_gwo_objective.png
+outputs/rl/rl_dynamic_trace.png
+outputs/rl/rl_power_profile.png
+outputs/rl/rl_waveform_profile.png
+
+
+Step 13: Run Multiple Seeds
+---------------------------
+
+RL can be unstable, so run more than one seed.
+
+Recommended:
+
+- 3 seeds for early experiments
+- 5 seeds for final results
+
+Report:
+
+- mean performance
+- standard deviation
+- best run
+- worst run
+
+
+Step 14: Compare Against Existing Project Results
+-------------------------------------------------
+
+Compare RL against the existing methods already implemented in the project:
+
+- GWO
+- PSO
+- DE
+- SA
+- SFO
+- POA
+- equal power
+- water filling, where applicable
+
+The main question:
+
+Can RL learn a fast policy that approaches GWO quality while producing decisions faster at runtime?
+
+
+Step 15: Use XGBoost Alongside RL
+---------------------------------
+
+XGBoost can still be useful after RL is added.
+
+Possible uses:
+
+- explain which channel features affect RL performance
+- compare GWO-learned surrogate vs RL-learned policy
+- create response surfaces for RL and GWO performance
+- identify channel states where RL underperforms GWO
+
+
+Step 16: Add RL Section to the Paper
+------------------------------------
+
+Once RL works, update the paper with:
+
+- RL problem formulation
+- state/action/reward design
+- PPO/SAC training setup
+- comparison against GWO and PSO
+- learning curves
+- runtime comparison
+- limitations
+
+
+Recommended Implementation Order
+--------------------------------
+
+1. Create isac_power_allocation/rl/env.py
+2. Add tests/test_rl_env.py
+3. Add random and equal-power baseline evaluation
+4. Add PPO training script
+5. Train PPO on a small debug environment
+6. Train PPO on the full 32-subcarrier environment
+7. Add SAC
+8. Compare PPO/SAC against GWO and PSO
+9. Generate RL plots
+10. Update the manuscript
+
+
+Minimum Successful Prototype
+----------------------------
+
+The first successful RL prototype should satisfy:
+
+- environment runs without errors
+- random policy produces valid rewards
+- PPO trains without crashing
+- PPO reward curve improves
+- PPO beats random policy
+- PPO beats or matches equal-power baseline
+
+After that, the project can move toward serious comparison against GWO.
+
+
+Final Project Story
+-------------------
+
+The complete project can be presented as:
+
+GWO optimizes ISAC power and waveform allocation.
+XGBoost learns and explains the GWO performance landscape.
+RL learns a sequential allocation policy for dynamic channel conditions.
+
+This gives the project optimization, explainability, and adaptive control.
