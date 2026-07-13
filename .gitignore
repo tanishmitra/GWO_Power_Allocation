@@ -1,2 +1,59 @@
-/scripts/main.tex
+# Python bytecode/cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test / coverage cache
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python packaging/build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Jupyter / notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Matplotlib local cache
+.mplconfig/
+
+# Generated experiment outputs
+outputs/
+
+# Optional: generated papers / LaTeX build files
+scripts/main.tex
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+# Local/private notes
 XGBoost_Project_Implementation_Details.txt
+RL_Implementation_Progress_Report.txt
